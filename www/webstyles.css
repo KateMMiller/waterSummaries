@@ -9,9 +9,13 @@
 }
 
 .container-fluid{
-  width: 100vw;
+  width: 95vw;
   /*height: 100vh;*/
   
+}
+
+.title{
+ display:none;
 }
 
 body {
@@ -31,7 +35,7 @@ p {
 /* Park name */
 h1 {
   font-family: "FrutigerLTStd-Black","Arial",Arial,sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   color: black;
   margin: 20px 0;
@@ -147,4 +151,12 @@ h5 {
 .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
     color: #ffffff;
     background-color: #3288bd;
+}
+
+.drop{
+  font-family: "Arial",Arial,sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  padding:0px 0px 0px 0px;
+  margin:0px 0px 0px 0px;
 }
