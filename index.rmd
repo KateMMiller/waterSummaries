@@ -22,7 +22,9 @@ knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FA
 ```{r libs, include = F, results = 'hide'}
 library(tidyverse)
 library(waterNETN)
-library(plotly)
+library(leaflet)
+
+#library(plotly)
 ```
 ```{r import, results = 'hide', cache = T}
 importData()
@@ -280,3 +282,138 @@ plotClimTrend(park = park, years = 1900:yr_current,
 plotClimAnom(park = park, years = 1900:yr_current, 
               parameter = c("ppt"), legend_position = 'right')
 ```
+
+## About the Sites
+```{r leaflet, out.width="80%", message=F}
+NPSbasic <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck58pyquo009v01p99xebegr9/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
+
+ESRIimagery <- "http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+
+ESRItopo <- "http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+
+ESRINatGeo <- "http://services.arcgisonline.com/arcgis/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
+
+# NPSimagery <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck72fwp2642dv07o7tbqinvz4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
+# 
+# NPSslate <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck5cpvc2e0avf01p9zaw4co8o/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
+# 
+# NPSlight <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck5cpia2u0auf01p9vbugvcpv/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
+
+bbox <- read.csv("boundboxes.csv") #lat/long coordinates and zoom level for each park 
+
+# Find center coordinates of park box
+long_cent <- mean(c(bbox$LongE[bbox$ParkCode == park], bbox$LongW[bbox$ParkCode == park]))
+lat_cent <- mean(c(bbox$LatN[bbox$ParkCode == park], bbox$LatS[bbox$ParkCode == park]))
+
+# Compile water sites dataframe with codes, names, lat/long coordinates, and site type
+water_sites1 <- getSites(park = park)[,c("SiteCode", "SiteName", "SiteLatitude", "SiteLongitude",
+                                         "site_type", "SiteDescription")]
+
+years_active <- getEvents(park = park, years = yr_start:yr_current, active = T) |> 
+  select(UnitCode, SiteCode, year) |> group_by(UnitCode, SiteCode) |> 
+  summarize(year_start = first(year), year_end = last(year), .groups = 'drop')
+
+
+water_sites <- left_join(water_sites1, years_active, by = c("SiteCode"))
+water_sites$Link = paste0("<a href='https://doimspp.sharepoint.com/sites/NETN_Photo_Viewer/Water_Quality_Site_Photos/", 
+                     water_sites$Site, ".jpg' target='_blank'>Site Photo</a>")
+
+# Legend html generator
+# Source: https://stackoverflow.com/questions/47064921/leaflet-legend-for-addawesomemarkers-function-with-icons
+# Icon library changed from font-awesome to ion
+
+markerLegendHTML <- function(IconSet) {
+    # Container div:
+    legendHtml <- "<div style='padding: 10px; padding-bottom: 10px;'>
+    <h4 style='padding-top:0; padding-bottom:10px; margin: 0; color:#555'> Legend </h4>" #legend title
+
+    n <- 1
+    # Add each icon for ion library icons:
+    for (Icon in IconSet) {
+        if (Icon[["library"]] == "ion") {
+        legendHtml<- 
+          paste0(legendHtml,
+          # marker and marker label div
+          "<div style='width: auto; height: 45px; display: flex; align-items: center;'>",
+          # awesome marker div
+          "<div style='position: relative; display: inline-block; width: 35px; height: 45px;' 
+          class='awesome-marker-icon-", Icon[["markerColor"]]," awesome-marker'>",
+          # add icons and set color
+          # class='ion ion-waterdrop icon-white' selects the correct library, icon, and color
+          "<i style='margin-left: 4px; margin-top: 11px' class= 'ion ion-",
+            Icon[["icon"]]," icon-", Icon[["iconColor"]],"'></i>",
+          "</div>", # close awesome marker div
+          # legend label div - use name set in IconSet
+          "<div style='position: relative; display: inline-block; margin-left: 8px;'>", 
+            names(IconSet)[n] ,"</div>",
+          "</div>") # close marker/marker label div    
+        }
+        n <- n + 1
+    } 
+    paste0(legendHtml, "</div>")
+}
+
+# Create list of icons to use in map
+IconSet <- awesomeIconList(
+  "stream" = makeAwesomeIcon(icon= 'waterdrop', markerColor = 'blue', iconColor = 'white', library = "ion"),
+  "lake" = makeAwesomeIcon(icon= 'waterdrop', markerColor = 'cadetblue', iconColor = 'white', library = "ion")
+)
+
+# Create leaflet map
+leaflet(height = 700) %>%
+    # set default view of park
+    setView(lng = long_cent,
+            lat = lat_cent,
+            zoom = bbox$Zoom[bbox$ParkCode == park]) %>%
+    # setMaxBounds(lng1 = bbox[bbox$ParkCode == parkcode,]$LongE,
+    #              lng2 = bbox[bbox$ParkCode == parkcode,]$LongW,
+    #              lat1 = bbox[bbox$ParkCode == parkcode,]$LatN,
+    #              lat2 = bbox[bbox$ParkCode == parkcode,]$LatS) %>%
+    # add map tiles
+    addTiles(group="Map", urlTemplate = NPSbasic, 
+             options = providerTileOptions(minZoom = bbox$minZoom[bbox$ParkCode == park])) %>%
+    addTiles(group="Imagery", urlTemplate = ESRIimagery) %>%
+    addTiles(group="Topo", urlTemplate = ESRItopo) %>%
+    addTiles(group="NatGeo", urlTemplate = ESRINatGeo) %>%
+    # add button to control map tiles
+    addLayersControl(map = ., baseGroups = c("Map","Imagery","Topo", "NatGeo"),
+                     options = layersControlOptions(collapsed=T)) %>%
+    # add site markers 
+    addAwesomeMarkers(data = water_sites, ~SiteLongitude, ~SiteLatitude, 
+                      icon = ~IconSet[site_type], #style markers based on site type
+                      # label on mouseover
+                      label=as.character(water_sites$SiteName),
+                      # popup on click
+                      popup = paste0("<b>", water_sites$SiteName, "</b><br>",
+                                     "<b>Type: </b>", water_sites$site_type, "<br>",
+                                     "<b>Sample Period: </b>", water_sites$year_start, "&ndash;",
+                                     water_sites$year_end, "<br>",
+                                     water_sites$SiteDescription, "<br>",
+                                     water_sites$Link
+                                     )
+                      ) %>%
+    # add legend
+    addControl(markerLegendHTML(IconSet = IconSet), position = "bottomleft")
+
+```
+```{r site_info, results = 'asis'}
+
+# option 2: site descriptions below map
+# for (i in site_list){
+#   # split because the cat didn't work with multiple items
+#   htmltools::h4(getSiteInfo(netnwd, park = parkcode, sitecode = i, info = "SiteName")) %>% 
+#     as.character() %>% 
+#     cat()
+#   
+#   site_info <- site_csv$Description[site_csv$SiteCode == i] 
+#   htmltools::withTags(body(site_info)) %>% 
+#     as.character() %>% 
+#     cat()
+# }
+
+```
+
+```{r About_tabs, child = "About_tabs.Rmd"}
+
+```
+
