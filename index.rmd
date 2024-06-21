@@ -1,0 +1,56 @@
+---
+output: 
+  html_document:
+    fig_caption: yes
+    css: www/webstyles.css
+    anchor_sections: FALSE
+    includes: 
+      in_header: "header_manual.html" 
+      after_body: "footer.html"
+    self_contained: yes
+params:
+  park: MABI # 4-letter park code
+  year_start: 2006 # first year of data
+  year_current: 2023 # current year of data
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "h")
+```
+
+```{r libs, include = F, results = 'hide'}
+library(tidyverse)
+library(waterNETN)
+```
+```{r import, results = 'hide', cache = T}
+importData()
+```
+
+```{r params}
+park <- params$park
+year_start <- params$year_start
+year_current <- params$year_current
+
+site_df <- getSites(park = park)[,c("SiteCode", "SiteName", "UnitCode", "UnitName")]
+site_list <- sort(unique(site_df$SiteCode))
+park_name <- unique(site_df$UnitName)
+```
+
+# `r park_name`  {.tabset .tabset-pills}
+
+## Water Quality {.tabset}
+
+### Status
+
+### Trends
+
+## Climate {.tabset}
+
+### Current Year
+
+### Historic Trends
+
+
+
+
+
