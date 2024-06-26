@@ -293,12 +293,6 @@ ESRItopo <- "http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Ma
 
 ESRINatGeo <- "http://services.arcgisonline.com/arcgis/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
 
-# NPSimagery <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck72fwp2642dv07o7tbqinvz4/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
-# 
-# NPSslate <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck5cpvc2e0avf01p9zaw4co8o/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
-# 
-# NPSlight <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck5cpia2u0auf01p9vbugvcpv/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
-
 bbox <- read.csv("boundboxes.csv") #lat/long coordinates and zoom level for each park 
 
 # Find center coordinates of park box
@@ -394,22 +388,6 @@ leaflet(height = 700) %>%
                       ) %>%
     # add legend
     addControl(markerLegendHTML(IconSet = IconSet), position = "bottomleft")
-
-```
-```{r site_info, results = 'asis'}
-
-# option 2: site descriptions below map
-# for (i in site_list){
-#   # split because the cat didn't work with multiple items
-#   htmltools::h4(getSiteInfo(netnwd, park = parkcode, sitecode = i, info = "SiteName")) %>% 
-#     as.character() %>% 
-#     cat()
-#   
-#   site_info <- site_csv$Description[site_csv$SiteCode == i] 
-#   htmltools::withTags(body(site_info)) %>% 
-#     as.character() %>% 
-#     cat()
-# }
 
 ```
 
