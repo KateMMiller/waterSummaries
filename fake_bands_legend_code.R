@@ -62,7 +62,7 @@ fake_bands <-
         axis.ticks = element_line(color = "#696969", linewidth = 0.4),
         legend.key = element_blank(),
         legend.key.width = unit(0.8, 'cm'),
-        legend.margin = margin(t = 0, unit = "cm"))
+        legend.margin = margin(t = 0, b = 0, unit = "cm"))
 
 fake_bands
 
@@ -85,7 +85,7 @@ fake_lines <-
         axis.ticks = element_line(color = "#696969", linewidth = 0.4),
         legend.key = element_blank(),
         legend.key.width = unit(0.8, 'cm'),
-        legend.margin = margin(t = 0, unit = "cm"))#+
+        legend.margin = margin(t = -1.5, b = 0, l = -7, r = 2, unit = "cm"))#+
 
 fake_lines  
 # guides(color = guide_legend(nrow = 2, byrow = TRUE),
@@ -114,7 +114,7 @@ fake_points <-
         axis.line.y = element_line(color = "#696969", linewidth = 0.4),
         axis.ticks = element_line(color = "#696969", linewidth = 0.4),
         legend.key = element_blank(),
-        legend.margin = margin(t = 0, unit = "cm"))
+        legend.margin = margin(t = -1.5, b = 0, r = -4, l = 2, unit = "cm"))
 
 fake_points
 

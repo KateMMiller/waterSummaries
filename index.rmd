@@ -10,7 +10,7 @@ output:
     self_contained: yes
 title: "NETN water summary"
 params:
-  park: SARA # 4-letter park code
+  park: MABI # 4-letter park code
   year_start: 2006 # first year of data
   year_current: 2023 # current year of data
 ---
@@ -23,7 +23,8 @@ knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FA
 library(tidyverse)
 library(waterNETN)
 library(leaflet)
-
+library(grid)
+library(gridExtra)
 #library(plotly)
 ```
 ```{r import, results = 'hide', cache = T}
@@ -38,7 +39,7 @@ yr_current <- params$year_current
 yr_prev <- yr_current - 1
 
 site_df <- getSites(park = park)[,c("SiteCode", "SiteName", "UnitCode", "UnitName")]
-site_list <- sort(unique(site_df$SiteCode))
+site_list <- unique(site_df$SiteCode)
 park_name <- unique(site_df$UnitName)
 
 source("fake_bands_legend_code.R") # for legend called legg
@@ -49,7 +50,8 @@ source("fake_bands_legend_code.R") # for legend called legg
 ## Water Quality  {.tabset}
 
 ### Status {.tabset}
-```{r waterband_chunk, warning = F, message = FALSE, eval = FALSE}
+
+```{r waterbandp_chunk, warning = F, message = FALSE, eval = FALSE}
 wbplot_DO <- 
 plotWaterBands(site = sitecode, year_current = yr_current, 
                years_historic = yr_start:yr_prev, 
@@ -70,31 +72,88 @@ plotWaterBands(site = sitecode, year_current = yr_current,
                years_historic = yr_start:yr_prev, 
                parameter = "Temp_C")
 
-wb_plot <- 
-grid.arrange(wbplot_DO, wbplot_pH, wbplot_sc, wbplot_temp, legg, 
+wbn_plot <- 
+grid.arrange(wbplot_DO, wbplot_pH, wbplot_temp, wbplot_sc, legg, 
              layout_matrix = rbind(c(1, 2),
                                    c(3, 4),
                                    c(5, 5)),
              heights = c(0.5, 0.5,  0.25),
              nrow = 3, ncol = 2)
 
-wb_plot
+wbn_plot
 
 ```
 
-```{r wband, warning = FALSE, message = FALSE, results = 'asis', fig.height=7, fig.width=10}
+```{r waterbandn_chunk, warning = F, message = FALSE, eval = FALSE}
+wbplot_TN <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "TN_mgL") 
+
+wbplot_TP <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "TP_ugL")
+
+wbplot_ANC <- 
+tryCatch(plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "ANC_ueqL"),
+    error = function(e){NULL})
+
+wbplot_ChlA <- 
+tryCatch(plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "ChlA_ugL"), 
+    error = function(e){NULL})
+
+wbp_plot <- 
+if(exists("wbplot_ANC") & exists("wbplot_ChlA")){
+  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ANC, wbplot_ChlA, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, 4),
+                                     c(5, 5)),
+               heights = c(0.5, 0.5,  0.25),
+               nrow = 3, ncol = 2)
+} else if(exists("wbplot_ANC")){
+  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ANC, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, NA),
+                                     c(4, 4)),
+               heights = c(0.5, 0.5,  0.25),
+               nrow = 3, ncol = 2)
+} else if(exists("wbplot_ChlA")){
+  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ChlA, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, NA),
+                                     c(4, 4)),
+               heights = c(0.5, 0.5,  0.25),
+               nrow = 3, ncol = 2)
+} else {
+  grid.arrange(wbplot_TN, wbplot_TP, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, 3),
+               heights = c(0.5, 0.25),
+               nrow = 2, ncol = 2))
+}
+
+
+```
+
+```{r wband, warning = FALSE, message = FALSE, results = 'asis', fig.height=9, fig.width=13}
 for(i in seq_along(site_list)){
   sitename <- site_df[i, "SiteName"]
   sitecode <- site_list[i]
-  cat("#### ", sitename, "\n\n")
+  cat("#### ", sitename, "{.tabset} \n\n")
   cat("\n\n")
+  cat("##### Physical", "\n\n")
   cat(paste0("<h2>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h2>\n"))
   cat("\n\n")
   
-  <<waterband_chunk>>
+  <<waterbandp_chunk>>
   
   cat(paste0(
-  "<p style='width:960px;'>",
+  "<p style='width:1280px;'>",
   'The plots above show historic ranges for ', sitename, 
    ' based on the range of measurements collected from ',
    yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
@@ -108,18 +167,42 @@ for(i in seq_along(site_list)){
    defined in "About the Data".</p>\n\n'))
   
   cat("\n\n")
+  
+  cat("##### Nutrient", "\n\n")
+  cat(paste0("<h2>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h2>\n"))
+  cat("\n\n")
+  
+  <<waterbandn_chunk>>
+  
+  cat(paste0(
+  "<p style='width:1280px;'>",
+  'The plots above show historic ranges for ', sitename, 
+   ' based on the range of measurements collected from ',
+   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+   historic maximum and minimum value collected for each month.
+   The second inner band represents the 95% range of historic values
+   by month. The innermost band represents the 50% range of historic
+   values by month. The points represent the most 
+   recent measurements collected in ', yr_current, ' by month. 
+   Water quality thresholds are derived from state surface water quality 
+   standards. Parameter abbreviations and additional information are
+   defined in "About the Data".</p>\n\n'))
+  
+  cat("\n\n")
+  
 }
 ```
 <br>
- 
+
+
 ### Trends {.tabset}
-```{r tr, warning = F, message = F, fig.height=7, fig.width=10, results = 'asis'}
+```{r tr, warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
 sonde_params <- c("DO_mgL", "pH", "Temp_C", "SpCond_uScm")
 
 plotTrend(park = park, years = yr_start:yr_current, parameter = sonde_params, 
-          smooth = T, span = 0.5, legend_position = 'right')
+          smooth = T, span = 0.5, legend_position = "bottom")
 
-cat(paste0("<p style='width:960px;'>Trends in physical water quality parameters for ", sitename, " from ",
+cat(paste0("<p style='width:1280px;'>Trends in physical water quality parameters for ", sitename, " from ",
            yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
            " Lines represent loess smoothed trends with span 0.5.</p>"))
 
@@ -128,160 +211,148 @@ cat(paste0("<p style='width:960px;'>Trends in physical water quality parameters 
 
 ## Climate {.tabset}
 
-### Current Year {.tabset}
-#### Summary {.tabset}
-<h3>Current vs. 20th Century Baseline</h3>
-<details open><summary class='drop'>Temperature</summary>
-```{r fig.height=7, fig.width=14}
-temp_comp <- plotClimComps(park = park,years= yr_current, palette = 'red', parameter = c('tmean'),
-                           legend_position = 'right', plot_title = F)
-temp_anom <- plotClimAnom(park = park, years = yr_current, parameter = 'tmean',
-                          legend_position = 'right')
-grid.arrange(temp_comp, temp_anom, nrow = 1)
+```{r}
+drgt_cumppt_cap1 <- paste0("<p style = 'width:1280px;>Figure on the left shows weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>. Figure on the right shows cumulative annual precipitation by month compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>") 
+
+anom_comp_cap1 <- paste0("<p style = 'width:1280px;'>Figure on the left compares current monthly climate data (solid) with historic baselines (dashed). Figure on the right represents monthly deviations from historic baselines, with positive (red) bars indicating above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Current monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>") 
+
+anom_cap5 <- paste0("<p style = 'width:1280px;'>Figure represents monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. 5-year monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+cum_cap5 <- paste0("<p style = 'width:1280px;'>Figure shows cumulative annual precipitation by month for past 5 years compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
+
+drgt_cap5 <- paste0("<p style = 'width:1280px;'>Figure shows last 5 years of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
+
+temp_capT <- paste0("<p style = 'width:1280px;'>Figure shows loess smoothed (span 0.3) minimum, maximum, and average temperature trends by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+ppt_capT <- paste0("<p style = 'width:1280px;'>Figure shows loess smoothed (span 0.3) total precipitation trends by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+anom_capT <- paste0("<p style = 'width:1280px;'>Figure represents monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+cum_capT <- paste0("<p style = 'width:1280px;'>Figure shows cumulative annual precipitation by month for past 5 years compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
+
+drgt_capT <- paste0("<p style = 'width:1280px;'>Figure shows last 5 years of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
 ```
+
+### Current Year {.tabset}
+<h1>Current vs. 20th Century Baseline</h1>
+<details open><summary class='drop'>Temperature</summary>
+```{r fig.height=7, fig.width=13, results = 'asis'}
+temp_comp <- plotClimComps(park = park, years= yr_current, palette = 'red', parameter = c('tmean'),
+                           legend_position = 'bottom', plot_title = F)
+temp_anom <- plotClimAnom(park = park, years = yr_current, parameter = 'tmean',
+                          legend_position = 'bottom')
+grid.arrange(temp_comp, temp_anom, nrow = 1)
+
+cat(anom_comp_cap1, "\n\n")
+```
+
 </details>
 <br>
 <details open><summary class='drop'>Precipitation</summary>
-```{r fig.height=7, fig.width=14}
+```{r fig.height=7, fig.width=13, results = 'asis'}
 ppt_comp <- plotClimComps(park = park,years= yr_current, palette = 'blue', parameter = c('ppt'),
-                           legend_position = 'right', plot_title = F)
+                           legend_position = "bottom", plot_title = F)
 ppt_anom <- plotClimAnom(park = park, years = yr_current, parameter = 'ppt',
-                          legend_position = 'right')
+                          legend_position = "bottom")
 grid.arrange(ppt_comp, ppt_anom, nrow = 1)
+
+cat(anom_comp_cap1, "\n\n")
 ```
 </details>
 <br>
 <details open><summary class='drop'>Drought Condition</summary>
-```{r fig.height=7, fig.width=14}
-drgt <- plotClimDrought(park = park, years = yr_current)
-pptcum <- plotClimCumPrecip(park = park, years = yr_current)
+```{r fig.height=7, fig.width=13, results = 'asis'}
+drgt <- plotClimDrought(park = park, years = yr_current, legend_position = 'bottom')
+pptcum <- plotClimCumPrecip(park = park, years = yr_current, legend_position = "bottom")
 grid.arrange(drgt, pptcum, nrow = 1)
+cat("\n\n")
+
+cat(drgt_cumppt_cap1, "\n\n")
+```
+</details>
+<br>
+
+### 5-year Trends {.tabset}
+<h1>5-year vs. 20th Century Baseline</h1>
+<details open><summary class='drop'>Temperature</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+yr1 = yr_current - 4
+plotClimAnom(park = park, years = yr1:yr_current, parameter = 'tmean', legend_position = "bottom", gridlines = "grid_x")
+cat(anom_cap5, "\n\n")
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Total Precipitation</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimAnom(park = park, years = yr1:yr_current, parameter = 'ppt', legend_position = "bottom", gridlines = "grid_x")
+cat(anom_cap5, "\n\n")
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Cumulative Precipitation</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimCumPrecip(park = park, years = yr1:yr_current, legend_position = "bottom")
+
+cat(cum_cap5, "\n\n")
+
+```
+</details>
+</br>
+
+<details open><summary class='drop'>Drought Condition</summary>
+```{r fig.height=8, fig.width=13}
+plotClimDrought(park = park, years = yr1:yr_current, gridlines = "grid_y", legend_position = "bottom")
+cat(drgt_cap5, "\n\n")
+```
+</details>
+</br>
+
+### Long-term Trends {.tabset}
+<h1>Historic Trends 1900:2023</h1>
+<details open><summary class='drop'>Temperature Trends</summary>
+```{r fig.height=8, fig.width=13, results = "asis"}
+plotClimTrend(park = park, years = 1900:yr_current, 
+              parameter = c("tmin", "tmax", "tmean"), facet_param = F,
+              palette = "Set2", legend_position = "bottom", layers = 'smooth')
+cat(temp_capT, "\n\n")
 
 ```
 </details>
 <br>
 
-#### Temperature {.tabset}
-
-<h3>Current Temps. vs. 20th Century Baseline</h3>
-```{r}
-plotClimComps(park = park, years = yr_current, palette = c("red"), parameter = 'tmean')
-```
-
-<h3>Current Temps. vs. 20th Century Baseline</h3>
-```{r}
-plotClimAnom(park = park, years = yr_current, parameter = 'tmean')
-```
-
-#### Precipitation
-<h3>Current Precip. vs. 20th Century Baseline</h3>
-```{r}
-plotClimComps(park = park, years = yr_current, palette = c("blue"), parameter= 'ppt')
-```
-
-
-<h3>Current Precip. vs. 20th Century Baseline</h3>
-```{r}
-plotClimAnom(park = park, years = yr_current, parameter = 'ppt')
-```
-
-<h3>Current Pct. Precip. vs. 20th Century Baseline</h3>
-```{r}
-plotClimRel(park = park, years = yr_current, parameter = 'ppt', palette = c("#1378b5"))
-```
-
-<h3>Cumulative Precip. compared to 20th Century baseline</h3>
-```{r}
-plotClimCumPrecip(park = park, years = yr_current, legend_position = 'right')
-```
-
-#### Drought Conditions
-
-<h3>Current U.S. Drought Monitor Conditions </h3>
-```{r}
-plotClimDrought(park = park, years = yr_current)
-
-```
-
-### Recent Trends {.tabset}
-
-#### Temperature
-
-<h3>5-year Temps. vs. 20th Century Baseline</h3>
-```{r}
-yr1 <- yr_current-4
-plotClimComps(park = park, years = yr1:yr_current, parameter = "tmean",
-              palette = c('#d7191c','#fdae61','#D4D459','#51A544','#2b83ba'))
-```
-
-<h3>5-year Temps. vs. 20th Century Baseline</h3>
-```{r}
-plotClimAnom(park = park, years = yr1:yr_current, parameter = 'tmean')
-```
-
-#### Precipitation
-<h3>5-year Precip. vs. 20th Century Baseline</h3>
-```{r}
-yr1 <- yr_current-5
-plotClimComps(park = park, years = yr1:yr_current, parameter = "ppt",
-              palette = c('#d7191c','#fdae61','#D4D459','#51A544','#2b83ba'))
-```
-
-<h3>5-year Precip. vs. 20th Century Baseline</h3>
-```{r}
-plotClimAnom(park = park, years = yr1:yr_current, parameter = 'ppt')
-```
-
-<h3>5-year Pct. Precip. vs. 20th Century Baseline</h3>
-```{r}
-plotClimRel(park = park, years = yr1:yr_current, parameter = 'ppt', palette = c("#1378b5"))
-```
-
-<h3>5-yearCumulative Precip. compared to 20th Century baseline</h3>
-```{r}
-plotClimCumPrecip(park = park, years = yr1:yr_current, legend_position = 'right')
-```
-
-#### Drought Conditions
-<h3>5-year U.S. Drought Monitor</h3>
-```{r}
-plotClimDrought(park = park, years = yr1:yr_current)
-
-```
-
-
-### Long-term Trends {.tabset}
-
-#### Temperature
-
-<h3>Historic Temperature Trends 1900:2023</h3>
-```{r}
-plotClimTrend(park = park, years = 1900:yr_current, 
-              parameter = c("tmin", "tmax", "tmean"), facet_param = F,
-              palette = "Set2", legend_position = 'right', layers = 'lines')
-```
-
-<h3>Historic Temperature Anomalies 1900:2023</h3>
-```{r}
+<details open><summary class='drop'>Temperature Anomalies</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
 plotClimAnom(park = park, years = 1900:yr_current, 
-              parameter = c("tmean"), legend_position = 'right')
+              parameter = c("tmean"), legend_position = "bottom")
+
+cat(anom_capT, "\n\n")
 ```
+</details>
+<br>
 
-#### Precipitation
-
-<h3>Historic Precipitation Trends 1900:2023</h3>
-```{r}
+<details open><summary class='drop'>Precipitation Trends</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
 plotClimTrend(park = park, years = 1900:yr_current, 
               parameter = c("ppt"), facet_param = F,
-              palette = "Set2", legend_position = 'right', layers = 'lines')
+              palette = "Set2", legend_position = "bottom", layers = 'smooth')
+
+cat(ppt_capT, "\n\n")
 ```
+</details>
+<br>
 
-
-<h3>Historic Precipitation Anomalies 1900:2023</h3>
-```{r}
+<details open><summary class='drop'>Precipitation Anomalies</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
 plotClimAnom(park = park, years = 1900:yr_current, 
-              parameter = c("ppt"), legend_position = 'right')
+              parameter = c("ppt"), legend_position = "bottom")
+
+cat(anom_capT, "\n\n")
 ```
+</details>
+<br>
+
 
 ## About the Sites
 ```{r leaflet, out.width="80%", message=F}
