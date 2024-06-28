@@ -10,47 +10,36 @@ output:
     self_contained: yes
 title: "NETN water summary"
 params:
-  park: MABI # 4-letter park code
   year_start: 2006 # first year of data
   year_current: 2023 # current year of data
 ---
+# {.tabset .tabset-pills}
 
-```{r setup, include = FALSE}
+```{r echo = F, include = F, cache = F}
 knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FALSE)
-```
-
-```{r libs, include = F, results = 'hide'}
+# Create environment for rmds to pull params from
 library(tidyverse)
 library(waterNETN)
 library(leaflet)
 library(grid)
 library(gridExtra)
-#library(plotly)
-```
-```{r import, results = 'hide', cache = T}
-importData()
-```
 
-```{r params}
-# park = "SARA"; yr_start = 2006; yr_current = 2023;
-park <- params$park
 yr_start <- params$year_start
 yr_current <- params$year_current
 yr_prev <- yr_current - 1
+#park_list <- c("MIMA")
 
-site_df <- getSites(park = park)[,c("SiteCode", "SiteName", "UnitCode", "UnitName")]
-site_list <- unique(site_df$SiteCode)
-park_name <- unique(site_df$UnitName)
+child_env <- new.env()
+importData()
+for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
 
-source("fake_bands_legend_code.R") # for legend called legg
+child_env$yr_start <- yr_start
+child_env$yr_current <- yr_current
+child_env$yr_prev <- yr_prev
+child_env$park_list <- c("MABI", "SAGA", "WEFA")
 ```
 
-# `r park_name`  {.tabset .tabset-pills}
-
-## Water Quality  {.tabset}
-
-### Status {.tabset}
-
+<!-- Set up water band physical chunk that's iterated in park_level_summary -->
 ```{r waterbandp_chunk, warning = F, message = FALSE, eval = FALSE}
 wbplot_DO <- 
 plotWaterBands(site = sitecode, year_current = yr_current, 
@@ -83,6 +72,8 @@ grid.arrange(wbplot_DO, wbplot_pH, wbplot_temp, wbplot_sc, legg,
 wbn_plot
 
 ```
+
+<!-- Set up water band chemistry chunk that's iterated in park_level_summary -->
 
 ```{r waterbandn_chunk, warning = F, message = FALSE, eval = FALSE}
 wbplot_TN <- 
@@ -133,336 +124,26 @@ if(exists("wbplot_ANC") & exists("wbplot_ChlA")){
   grid.arrange(wbplot_TN, wbplot_TP, legg,
                layout_matrix = rbind(c(1, 2),
                                      c(3, 3),
-               heights = c(0.5, 0.25),
+               heights = c(0.9, 0.25),
                nrow = 2, ncol = 2))
 }
 
 
 ```
 
-```{r wband, warning = FALSE, message = FALSE, results = 'asis', fig.height=9, fig.width=13}
-for(i in seq_along(site_list)){
-  sitename <- site_df[i, "SiteName"]
-  sitecode <- site_list[i]
-  cat("#### ", sitename, "{.tabset} \n\n")
-  cat("\n\n")
-  cat("##### Physical", "\n\n")
-  cat(paste0("<h2>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h2>\n"))
-  cat("\n\n")
+```{r results = 'asis', include = F}
+res <- lapply(seq_along(child_env$park_list), function(x){
+  child_env$park = child_env$park_list[[x]]
+  knitr::knit_child("park_level_summary.rmd", envir = child_env)
+  #knitr::knit_child("About_tabs.Rmd", envir = child_env)
   
-  <<waterbandp_chunk>>
-  
-  cat(paste0(
-  "<p style='width:1280px;'>",
-  'The plots above show historic ranges for ', sitename, 
-   ' based on the range of measurements collected from ',
-   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
-   historic maximum and minimum value collected for each month.
-   The second inner band represents the 95% range of historic values
-   by month. The innermost band represents the 50% range of historic
-   values by month. The points represent the most 
-   recent measurements collected in ', yr_current, ' by month. 
-   Water quality thresholds are derived from state surface water quality 
-   standards. Parameter abbreviations and additional information are
-   defined in "About the Data".</p>\n\n'))
-  
-  cat("\n\n")
-  
-  cat("##### Nutrient", "\n\n")
-  cat(paste0("<h2>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h2>\n"))
-  cat("\n\n")
-  
-  <<waterbandn_chunk>>
-  
-  cat(paste0(
-  "<p style='width:1280px;'>",
-  'The plots above show historic ranges for ', sitename, 
-   ' based on the range of measurements collected from ',
-   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
-   historic maximum and minimum value collected for each month.
-   The second inner band represents the 95% range of historic values
-   by month. The innermost band represents the 50% range of historic
-   values by month. The points represent the most 
-   recent measurements collected in ', yr_current, ' by month. 
-   Water quality thresholds are derived from state surface water quality 
-   standards. Parameter abbreviations and additional information are
-   defined in "About the Data".</p>\n\n'))
-  
-  cat("\n\n")
-  
-}
+})
 ```
-<br>
-
-
-### Trends {.tabset}
-```{r tr, warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
-sonde_params <- c("DO_mgL", "pH", "Temp_C", "SpCond_uScm")
-
-plotTrend(park = park, years = yr_start:yr_current, parameter = sonde_params, 
-          smooth = T, span = 0.5, legend_position = "bottom")
-
-cat(paste0("<p style='width:1280px;'>Trends in physical water quality parameters for ", sitename, " from ",
-           yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
-           " Lines represent loess smoothed trends with span 0.5.</p>"))
-
+```{r results = 'asis'}
+cat(unlist(res), sep = "\n\n")
 ```
 
-
-## Climate {.tabset}
-
-```{r}
-drgt_cumppt_cap1 <- paste0("<p style = 'width:1280px;>Figure on the left shows weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>. Figure on the right shows cumulative annual precipitation by month compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>") 
-
-anom_comp_cap1 <- paste0("<p style = 'width:1280px;'>Figure on the left compares current monthly climate data (solid) with historic baselines (dashed). Figure on the right represents monthly deviations from historic baselines, with positive (red) bars indicating above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Current monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>") 
-
-anom_cap5 <- paste0("<p style = 'width:1280px;'>Figure represents monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. 5-year monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
-
-cum_cap5 <- paste0("<p style = 'width:1280px;'>Figure shows cumulative annual precipitation by month for past 5 years compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
-
-drgt_cap5 <- paste0("<p style = 'width:1280px;'>Figure shows last 5 years of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
-
-temp_capT <- paste0("<p style = 'width:1280px;'>Figure shows loess smoothed (span 0.3) minimum, maximum, and average temperature trends by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
-
-ppt_capT <- paste0("<p style = 'width:1280px;'>Figure shows loess smoothed (span 0.3) total precipitation trends by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
-
-anom_capT <- paste0("<p style = 'width:1280px;'>Figure represents monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
-
-cum_capT <- paste0("<p style = 'width:1280px;'>Figure shows cumulative annual precipitation by month for past 5 years compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
-
-drgt_capT <- paste0("<p style = 'width:1280px;'>Figure shows last 5 years of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
-```
-
-### Current Year {.tabset}
-<h1>Current vs. 20th Century Baseline</h1>
-<details open><summary class='drop'>Temperature</summary>
-```{r fig.height=7, fig.width=13, results = 'asis'}
-temp_comp <- plotClimComps(park = park, years= yr_current, palette = 'red', parameter = c('tmean'),
-                           legend_position = 'bottom', plot_title = F)
-temp_anom <- plotClimAnom(park = park, years = yr_current, parameter = 'tmean',
-                          legend_position = 'bottom')
-grid.arrange(temp_comp, temp_anom, nrow = 1)
-
-cat(anom_comp_cap1, "\n\n")
-```
-
-</details>
-<br>
-<details open><summary class='drop'>Precipitation</summary>
-```{r fig.height=7, fig.width=13, results = 'asis'}
-ppt_comp <- plotClimComps(park = park,years= yr_current, palette = 'blue', parameter = c('ppt'),
-                           legend_position = "bottom", plot_title = F)
-ppt_anom <- plotClimAnom(park = park, years = yr_current, parameter = 'ppt',
-                          legend_position = "bottom")
-grid.arrange(ppt_comp, ppt_anom, nrow = 1)
-
-cat(anom_comp_cap1, "\n\n")
-```
-</details>
-<br>
-<details open><summary class='drop'>Drought Condition</summary>
-```{r fig.height=7, fig.width=13, results = 'asis'}
-drgt <- plotClimDrought(park = park, years = yr_current, legend_position = 'bottom')
-pptcum <- plotClimCumPrecip(park = park, years = yr_current, legend_position = "bottom")
-grid.arrange(drgt, pptcum, nrow = 1)
-cat("\n\n")
-
-cat(drgt_cumppt_cap1, "\n\n")
-```
-</details>
-<br>
-
-### 5-year Trends {.tabset}
-<h1>5-year vs. 20th Century Baseline</h1>
-<details open><summary class='drop'>Temperature</summary>
-```{r fig.height=8, fig.width=13, results = 'asis'}
-yr1 = yr_current - 4
-plotClimAnom(park = park, years = yr1:yr_current, parameter = 'tmean', legend_position = "bottom", gridlines = "grid_x")
-cat(anom_cap5, "\n\n")
-```
-</details>
-<br>
-
-<details open><summary class='drop'>Total Precipitation</summary>
-```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimAnom(park = park, years = yr1:yr_current, parameter = 'ppt', legend_position = "bottom", gridlines = "grid_x")
-cat(anom_cap5, "\n\n")
-```
-</details>
-<br>
-
-<details open><summary class='drop'>Cumulative Precipitation</summary>
-```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimCumPrecip(park = park, years = yr1:yr_current, legend_position = "bottom")
-
-cat(cum_cap5, "\n\n")
-
-```
-</details>
-</br>
-
-<details open><summary class='drop'>Drought Condition</summary>
-```{r fig.height=8, fig.width=13}
-plotClimDrought(park = park, years = yr1:yr_current, gridlines = "grid_y", legend_position = "bottom")
-cat(drgt_cap5, "\n\n")
-```
-</details>
-</br>
-
-### Long-term Trends {.tabset}
-<h1>Historic Trends 1900:2023</h1>
-<details open><summary class='drop'>Temperature Trends</summary>
-```{r fig.height=8, fig.width=13, results = "asis"}
-plotClimTrend(park = park, years = 1900:yr_current, 
-              parameter = c("tmin", "tmax", "tmean"), facet_param = F,
-              palette = "Set2", legend_position = "bottom", layers = 'smooth')
-cat(temp_capT, "\n\n")
-
-```
-</details>
-<br>
-
-<details open><summary class='drop'>Temperature Anomalies</summary>
-```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimAnom(park = park, years = 1900:yr_current, 
-              parameter = c("tmean"), legend_position = "bottom")
-
-cat(anom_capT, "\n\n")
-```
-</details>
-<br>
-
-<details open><summary class='drop'>Precipitation Trends</summary>
-```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimTrend(park = park, years = 1900:yr_current, 
-              parameter = c("ppt"), facet_param = F,
-              palette = "Set2", legend_position = "bottom", layers = 'smooth')
-
-cat(ppt_capT, "\n\n")
-```
-</details>
-<br>
-
-<details open><summary class='drop'>Precipitation Anomalies</summary>
-```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimAnom(park = park, years = 1900:yr_current, 
-              parameter = c("ppt"), legend_position = "bottom")
-
-cat(anom_capT, "\n\n")
-```
-</details>
-<br>
-
-
-## About the Sites
-```{r leaflet, out.width="80%", message=F}
-NPSbasic <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck58pyquo009v01p99xebegr9/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
-
-ESRIimagery <- "http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-
-ESRItopo <- "http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
-
-ESRINatGeo <- "http://services.arcgisonline.com/arcgis/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
-
-bbox <- read.csv("boundboxes.csv") #lat/long coordinates and zoom level for each park 
-
-# Find center coordinates of park box
-long_cent <- mean(c(bbox$LongE[bbox$ParkCode == park], bbox$LongW[bbox$ParkCode == park]))
-lat_cent <- mean(c(bbox$LatN[bbox$ParkCode == park], bbox$LatS[bbox$ParkCode == park]))
-
-# Compile water sites dataframe with codes, names, lat/long coordinates, and site type
-water_sites1 <- getSites(park = park)[,c("SiteCode", "SiteName", "SiteLatitude", "SiteLongitude",
-                                         "site_type", "SiteDescription")]
-
-years_active <- getEvents(park = park, years = yr_start:yr_current, active = T) |> 
-  select(UnitCode, SiteCode, year) |> group_by(UnitCode, SiteCode) |> 
-  summarize(year_start = first(year), year_end = last(year), .groups = 'drop')
-
-
-water_sites <- left_join(water_sites1, years_active, by = c("SiteCode"))
-water_sites$Link = paste0("<a href='https://doimspp.sharepoint.com/sites/NETN_Photo_Viewer/Water_Quality_Site_Photos/", 
-                     water_sites$Site, ".jpg' target='_blank'>Site Photo</a>")
-
-# Legend html generator
-# Source: https://stackoverflow.com/questions/47064921/leaflet-legend-for-addawesomemarkers-function-with-icons
-# Icon library changed from font-awesome to ion
-
-markerLegendHTML <- function(IconSet) {
-    # Container div:
-    legendHtml <- "<div style='padding: 10px; padding-bottom: 10px;'>
-    <h4 style='padding-top:0; padding-bottom:10px; margin: 0; color:#555'> Legend </h4>" #legend title
-
-    n <- 1
-    # Add each icon for ion library icons:
-    for (Icon in IconSet) {
-        if (Icon[["library"]] == "ion") {
-        legendHtml<- 
-          paste0(legendHtml,
-          # marker and marker label div
-          "<div style='width: auto; height: 45px; display: flex; align-items: center;'>",
-          # awesome marker div
-          "<div style='position: relative; display: inline-block; width: 35px; height: 45px;' 
-          class='awesome-marker-icon-", Icon[["markerColor"]]," awesome-marker'>",
-          # add icons and set color
-          # class='ion ion-waterdrop icon-white' selects the correct library, icon, and color
-          "<i style='margin-left: 4px; margin-top: 11px' class= 'ion ion-",
-            Icon[["icon"]]," icon-", Icon[["iconColor"]],"'></i>",
-          "</div>", # close awesome marker div
-          # legend label div - use name set in IconSet
-          "<div style='position: relative; display: inline-block; margin-left: 8px;'>", 
-            names(IconSet)[n] ,"</div>",
-          "</div>") # close marker/marker label div    
-        }
-        n <- n + 1
-    } 
-    paste0(legendHtml, "</div>")
-}
-
-# Create list of icons to use in map
-IconSet <- awesomeIconList(
-  "stream" = makeAwesomeIcon(icon= 'waterdrop', markerColor = 'blue', iconColor = 'white', library = "ion"),
-  "lake" = makeAwesomeIcon(icon= 'waterdrop', markerColor = 'cadetblue', iconColor = 'white', library = "ion")
-)
-
-# Create leaflet map
-leaflet(height = 700) %>%
-    # set default view of park
-    setView(lng = long_cent,
-            lat = lat_cent,
-            zoom = bbox$Zoom[bbox$ParkCode == park]) %>%
-    # setMaxBounds(lng1 = bbox[bbox$ParkCode == parkcode,]$LongE,
-    #              lng2 = bbox[bbox$ParkCode == parkcode,]$LongW,
-    #              lat1 = bbox[bbox$ParkCode == parkcode,]$LatN,
-    #              lat2 = bbox[bbox$ParkCode == parkcode,]$LatS) %>%
-    # add map tiles
-    addTiles(group="Map", urlTemplate = NPSbasic, 
-             options = providerTileOptions(minZoom = bbox$minZoom[bbox$ParkCode == park])) %>%
-    addTiles(group="Imagery", urlTemplate = ESRIimagery) %>%
-    addTiles(group="Topo", urlTemplate = ESRItopo) %>%
-    addTiles(group="NatGeo", urlTemplate = ESRINatGeo) %>%
-    # add button to control map tiles
-    addLayersControl(map = ., baseGroups = c("Map","Imagery","Topo", "NatGeo"),
-                     options = layersControlOptions(collapsed=T)) %>%
-    # add site markers 
-    addAwesomeMarkers(data = water_sites, ~SiteLongitude, ~SiteLatitude, 
-                      icon = ~IconSet[site_type], #style markers based on site type
-                      # label on mouseover
-                      label=as.character(water_sites$SiteName),
-                      # popup on click
-                      popup = paste0("<b>", water_sites$SiteName, "</b><br>",
-                                     "<b>Type: </b>", water_sites$site_type, "<br>",
-                                     "<b>Sample Period: </b>", water_sites$year_start, "&ndash;",
-                                     water_sites$year_end, "<br>",
-                                     water_sites$SiteDescription, "<br>",
-                                     water_sites$Link
-                                     )
-                      ) %>%
-    # add legend
-    addControl(markerLegendHTML(IconSet = IconSet), position = "bottomleft")
-
-```
-
-```{r About_tabs, child = "About_tabs.Rmd"}
+```{r child = "About_tabs.Rmd", eval = T}
 
 ```
 
