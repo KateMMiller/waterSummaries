@@ -147,6 +147,11 @@ h5 {
     color: #3288bd;
     font-family: "FrutigerLTStd-Light",FrutigerLTStd-Light, sans-serif;
     font-size: 16px;
+    /*max-width: 96vw;*/
+}
+
+.nav-tabs{
+  max-width: 96vw;
 }
 .nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
     color: #ffffff;
