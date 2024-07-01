@@ -1,0 +1,769 @@
+---
+output: 
+  html_document:
+    fig_caption: yes
+    css: www/webstyles.css
+    anchor_sections: FALSE
+    includes: 
+      in_header: "header_manual.html" 
+      after_body: "footer.html"
+    self_contained: yes
+title: "NETN water summary"
+params:
+  park: MABI # 4-letter park code
+  year_start: 2006 # first year of data
+  year_current: 2023 # current year of data
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FALSE)
+```
+
+```{r include = F, results = 'hide'}
+library(tidyverse)
+library(waterNETN)
+library(leaflet)
+library(grid)
+library(gridExtra)
+library(kableExtra)
+#library(plotly)
+```
+```{r results = 'hide', cache = T, eval = T}
+importData()
+```
+
+```{r }
+# park = "ACAD"; yr_start = 2006; yr_current = 2023;
+parkcode <- "ACAD" #child_env$park
+park = parkcode
+yr_start <- params$year_start
+yr_current <- params$year_current
+yr_prev <- yr_current - 1
+
+site_df <- unique(getEvents(park = "ACAD", years = yr_current)[, c("SiteCode", "SiteName", "UnitCode", "UnitName", "SiteType")])
+#site_df <- getSites(park = parkcode)[,c("SiteCode", "SiteName", "UnitCode", "UnitName")]
+site_list <- unique(site_df$SiteCode)
+park_name <- unique(site_df$UnitName)
+site_name <- unique(site_df$SiteName)
+lake_list <- site_df$SiteCode[site_df$SiteType == "Lake"]
+stream_list <- site_df$SiteCode[site_df$SiteType == "Stream"]
+eval_stream <- if(!is.null(stream_list)){TRUE} else {FALSE}
+eval_lake <- if(!is.null(lake_list)){TRUE} else {FALSE}
+
+source("fake_bands_legend_code.R") # for legend called legg
+```
+
+<!-- Remove after working -->
+```{r waterbandp_chunk, warning = F, message = FALSE, eval = FALSE}
+wbplot_DO <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "DO_mgL") 
+
+wbplot_pH <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "pH")
+
+wbplot_sc <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "SpCond_uScm")
+
+wbplot_temp <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "Temp_C")
+
+wbn_plot <- 
+grid.arrange(wbplot_DO, wbplot_pH, wbplot_temp, wbplot_sc, legg, 
+             layout_matrix = rbind(c(1, 2),
+                                   c(3, 4),
+                                   c(5, 5)),
+             heights = c(0.5, 0.5,  0.25),
+             nrow = 3, ncol = 2)
+
+wbn_plot
+
+```
+
+<!-- Remove after working -->
+
+```{r waterbandn_chunk, warning = F, message = FALSE, eval = FALSE}
+wbplot_TN <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "TN_mgL") 
+
+wbplot_TP <- 
+plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "TP_ugL")
+
+wbplot_ANC <- 
+tryCatch(plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "ANC_ueqL"),
+    error = function(e){NULL})
+
+wbplot_ChlA <- 
+tryCatch(plotWaterBands(site = sitecode, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, 
+               parameter = "ChlA_ugL"), 
+    error = function(e){NULL})
+
+wbp_plot <- 
+if(exists("wbplot_ANC") & exists("wbplot_ChlA")){
+  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ANC, wbplot_ChlA, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, 4),
+                                     c(5, 5)),
+               heights = c(0.5, 0.5,  0.25),
+               nrow = 3, ncol = 2)
+} else if(exists("wbplot_ANC")){
+  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ANC, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, NA),
+                                     c(4, 4)),
+               heights = c(0.5, 0.5,  0.25),
+               nrow = 3, ncol = 2)
+} else if(exists("wbplot_ChlA")){
+  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ChlA, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, NA),
+                                     c(4, 4)),
+               heights = c(0.5, 0.5,  0.25),
+               nrow = 3, ncol = 2)
+} else {
+  grid.arrange(wbplot_TN, wbplot_TP, legg,
+               layout_matrix = rbind(c(1, 2),
+                                     c(3, 3),
+               heights = c(0.9, 0.25),
+               nrow = 2, ncol = 2))
+}
+
+
+```
+
+
+##  `r park` {.tabset}
+### Lakes {.tabset}
+<!-- Plots for lakes only -->
+#### Water Quality  {.tabset}
+##### Status {.tabset}
+```{r warning = FALSE, message = FALSE, results = 'asis', fig.height=9, fig.width=13}
+for(i in seq_along(lake_list)){
+  lakecode <- lake_list[[i]]
+  sitename <- site_df$SiteName[site_df$SiteCode==lakecode]
+  sitecode <- site_df$SiteCode[site_df$SiteCode==lakecode]
+  cat("###### ", sitename, "{.tabset} \n\n")
+  cat("\n\n")
+  cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
+  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h1>\n\n"))
+
+  <<waterbandp_chunk>>
+  
+  cat(paste0(
+  "<p style='width:1280px;'>",
+  'The plots above show historic ranges for ', sitename, 
+   ' based on the range of measurements collected from ',
+   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+   historic maximum and minimum value collected for each month.
+   The second inner band represents the 95% range of historic values
+   by month. The innermost band represents the 50% range of historic
+   values by month. The points represent the most 
+   recent measurements collected in ', yr_current, ' by month. 
+   Water quality thresholds are derived from state surface water quality 
+   standards. Parameter abbreviations and additional information are
+   defined in "About the Data".</p>\n\n'))
+  cat("</details><br>\n")
+  
+  cat("\n\n")
+  
+  cat("<details open><summary class = 'drop'>Lab Chemistry</summary>", "\n\n")
+  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h1>\n\n"))
+
+  <<waterbandn_chunk>>
+  
+  cat(paste0(
+  "<p style='width:1280px;'>",
+  'The plots above show historic ranges for ', sitename, 
+   ' based on the range of measurements collected from ',
+   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+   historic maximum and minimum value collected for each month.
+   The second inner band represents the 95% range of historic values
+   by month. The innermost band represents the 50% range of historic
+   values by month. The points represent the most 
+   recent measurements collected in ', yr_current, ' by month. 
+   Water quality thresholds are derived from state surface water quality 
+   standards. Parameter abbreviations and additional information are
+   defined in "About the Data".</p>\n\n'))
+  cat("</details><br>\n\n")
+  
+}
+```
+<br>
+
+##### Trends {.tabset}
+```{r warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
+sonde_params <- c("DO_mgL", "pH", "Temp_C", "SpCond_uScm")
+chem_params <- c("TN_mgL", "TP_ugL", "ANC_ueqL")#, "ChlA_ugL")
+
+cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
+plotTrend(park = parkcode, site = lake_list, years = yr_start:yr_current, parameter = sonde_params, 
+          smooth = T, span = 0.5, legend_position = "bottom", threshold = F, numcol = 2)
+
+cat(paste0("<p style='width:1280px;'>Trends in field water quality parameters for ", sitename, " from ",
+           yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
+           " Lines represent loess smoothed trends with span 0.5.</p></details>\n\n"))
+
+cat("\n\n")
+
+cat("<details open><summary class = 'drop'>Lab Chemistry</summary>", "\n\n")
+plotTrend(park = parkcode, site = lake_list, years = yr_start:yr_current, parameter = chem_params, 
+          smooth = T, span = 0.5, legend_position = "bottom", threshold = F, numcol = 2)
+
+cat(paste0("<p style='width:1280px;'>Trends in lab chemistry water quality parameters for ", sitename, " from ",
+           yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
+           " Lines represent loess smoothed trends with span 0.5.</p></details>\n\n"))
+```
+
+#### Water Quantity {.tabset}
+##### Status
+
+```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=7, fig.width=13}
+cat("<details open><summary class='drop'>Lake Water Level</summary>")
+
+plot_lname <- ifelse(length(lake_list) == 1, 
+                     site_df$SiteName[site_df$SiteCode == lake_list], 
+                     park_name)
+
+plotWaterBands(park = parkcode, site = lake_list, year_current = yr_current, 
+               years_historic = yr_start:yr_prev, parameter = "WaterLevel_Feet", 
+               scales = "free_y")
+
+cat(paste0(
+  "<p style='width:1280px;'>",
+  'Historic ranges in water level for ', plot_lname, 
+   ' based on the range of measurements collected from ',
+   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+   historic maximum and minimum value collected for each month.
+   The second inner band represents the 95% range of historic values
+   by month. The innermost band represents the 50% range of historic
+   values by month. The points represent the most 
+   recent measurements collected in ', yr_current, ' by month. </p>\n\n'))
+  cat("</details><br>\n\n")
+```
+
+##### Trends
+```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=7, fig.width=13}
+cat("<details open><summary class='drop'>Lake Water Level</summary>")
+
+plot_lname <- ifelse(length(lake_list) == 1, site_df$SiteName[site_df$SiteCode == lake_list], 
+                     park_name)
+
+plotTrend(park = parkcode, site = lake_list, months = 5:10,
+          years = 2013:yr_current, parameter = "WaterLevel_Feet", span = 0.5, gridlines = "grid_x",
+          legend_position = 'right')
+
+cat(paste0(
+  "<p style='width:1280px;'>",
+  'Trends in water level for ', plot_lname, 
+   ' from 2013 to ', yr_current, ' for each month. Points represent monthly sample measurements. Lines represent loess smoothed trends with span 0.5.</p>\n\n'))
+```
+<br>
+```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=3, fig.width=13}
+plotClimTrend(park = parkcode, years = 2013:yr_current, parameter = 'ppt', palette = c("Set2"), 
+              months = 5:10, layers = 'bar', gridlines = "grid_x")
+cat(paste0(
+  "<p style='width:1280px;'>",
+  'Trends in monthly precipitation from May to October for ', plot_lname, 
+   ' from 2013 to ', yr_current, '.</p>\n\n'))
+
+```
+</details><br>
+
+#### Lake Profiles {.tabset}
+<!-- Move to index after working -->
+```{r}
+param_list <- c("DO_mgL", "Temp_C", "pH", "SpCond_uScm", "ChlA_ugL")#, "Turbidity_FNU")
+param_name <- c("Dissolved Oxygen (mgL)", "Temperature (C)", "pH", "Specific Conductance (uScm)",
+                "Chlorophyll A (ugL)")#, "Turbidity (FNU)")
+param_df <- data.frame(param = param_list, param_name = param_name)
+```
+
+##### Status
+```{r prof_stat, results = 'asis', eval = F}
+cat(paste0("<details open><summary class = 'drop'>", param_name, "</summary>", "\n\n"))
+cat("\n\n")
+prof_splot <- plotLakeProfile(site = lake_list, years = yr_current, parameter = param)
+print(prof_splot)
+cat("\n\n")
+cat(paste0("<p style='width:1280px;'>Depth profiles of ", param_name, " for ", yr_current, "</p>", "\n\n"))
+cat("</details>", "\n\n")
+```
+
+```{r results = 'asis', fig.height = 9, fig.width = 13}
+for(i in seq_along(param_list)){
+  param = param_df$param[[i]]
+  param_name = param_df$param_name[param_df$param == param]
+
+  <<prof_stat>>
+}
+```
+
+##### Trends {.tabset}
+<!-- Move to index after working -->
+```{r prof_trend, results = 'asis', eval = F}
+cat(paste0("<details open><summary class = 'drop'>", param_name, "</summary>", "\n\n"))
+sitename = site_df$SiteName[site_df$SiteCode==sitecode]
+cat("\n\n")
+prof_tplot <- plotLakeProfile(site = sitecode, years = yr_start:yr_current, parameter = param)
+print(prof_tplot)
+cat("\n\n")
+cat(paste0("<p style='width:1280px;'>Depth profiles in ", sitename, " for ", param_name, " from ", yr_start, 
+    " to ", yr_current, "</p>"))
+cat("</details>", "\n\n")
+```
+
+
+```{r results = 'asis', fig.height = 9, fig.width = 13}
+for(i in seq_along(lake_list)){
+  sitecode = lake_list[[i]]
+  cat("###### ", sitecode, "\n\n")
+  for(j in seq_along(param_list)){
+  param = param_df$param[[j]]
+  param_name = param_df$param_name[param_df$param == param]
+  
+  <<prof_trend>>
+    
+  }
+}
+```
+
+
+#### Sampling History {.tabset}
+```{r}
+samp_hist <- sumEvents(park = parkcode, site_type ='lake', years = yr_start:yr_current) |> 
+  select(SiteName, param_type:Oct_cens) |> 
+  arrange(SiteName, param_type, Parameter)
+
+samp_tab <- 
+  kable(samp_hist, format = 'html', align = c(rep("l", 3), rep("c", 13)),
+        col.names = c("Site Name", "Param. Type", "Parameter", "Year Range",
+                      "# Years Sampled", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+                      "May cens.", "Jun cens.", "Jul cens.", "Aug cens.", "Sep cens.", "Oct cens.")) |> 
+  kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), full_width = FALSE,
+               position = 'left', font_size = 11) |> 
+  collapse_rows(1:2, valign = 'top') 
+
+samp_tab
+```
+
+
+<!-- Plots for streams only -->
+### Streams {.tabset}
+#### Water Quality  {.tabset}
+##### Status {.tabset}
+
+```{r warning = FALSE, message = FALSE, results = 'asis', fig.height=9, fig.width=13}
+for(i in seq_along(stream_list)){
+  streamcode <- stream_list[[i]]
+  sitename <- site_df$SiteName[site_df$SiteCode==streamcode]
+  sitecode <- site_df$SiteCode[site_df$SiteCode==streamcode]
+  cat("###### ", sitename, "{.tabset} \n\n")
+  cat("\n\n")
+  cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
+  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h1>\n\n"))
+
+  <<waterbandp_chunk>>
+  
+  cat(paste0(
+  "<p style='width:1280px;'>",
+  'The plots above show historic ranges for ', sitename, 
+   ' based on the range of measurements collected from ',
+   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+   historic maximum and minimum value collected for each month.
+   The second inner band represents the 95% range of historic values
+   by month. The innermost band represents the 50% range of historic
+   values by month. The points represent the most 
+   recent measurements collected in ', yr_current, ' by month. 
+   Water quality thresholds are derived from state surface water quality 
+   standards. Parameter abbreviations and additional information are
+   defined in "About the Data".</p>\n\n'))
+  cat("</details><br>\n")
+  
+  cat("\n\n")
+  
+  cat("<details open><summary class = 'drop'>Lab Chemistry</summary>", "\n\n")
+  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h1>\n\n"))
+
+  <<waterbandn_chunk>>
+  
+  cat(paste0(
+  "<p style='width:1280px;'>",
+  'The plots above show historic ranges for ', sitename, 
+   ' based on the range of measurements collected from ',
+   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+   historic maximum and minimum value collected for each month.
+   The second inner band represents the 95% range of historic values
+   by month. The innermost band represents the 50% range of historic
+   values by month. The points represent the most 
+   recent measurements collected in ', yr_current, ' by month. 
+   Water quality thresholds are derived from state surface water quality 
+   standards. Parameter abbreviations and additional information are
+   defined in "About the Data".</p>\n\n'))
+  cat("</details><br>\n\n")
+  
+}
+```
+<br>
+
+##### Trends {.tabset}
+```{r warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
+sonde_params <- c("DO_mgL", "pH", "Temp_C", "SpCond_uScm")
+chem_params <- c("TN_mgL", "TP_ugL", "ANC_ueqL")#, "ChlA_ugL")
+
+cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
+plotTrend(park = parkcode, site = stream_list, years = yr_start:yr_current, parameter = sonde_params, 
+          smooth = T, span = 0.5, legend_position = "bottom", threshold = F, numcol = 2)
+
+cat(paste0("<p style='width:1280px;'>Trends in field water quality parameters for ", sitename, " from ",
+           yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
+           " Lines represent loess smoothed trends with span 0.5.</p></details>\n\n"))
+
+cat("\n\n")
+
+cat("<details open><summary class = 'drop'>Lab Chemistry</summary>", "\n\n")
+plotTrend(park = parkcode, site = stream_list, years = yr_start:yr_current, parameter = chem_params, 
+          smooth = T, span = 0.5, legend_position = "bottom", threshold = F, numcol = 2)
+
+cat(paste0("<p style='width:1280px;'>Trends in lab chemistry water quality parameters for ", sitename, " from ",
+           yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
+           " Lines represent loess smoothed trends with span 0.5.</p></details>\n\n"))
+```
+
+#### Water Quantity {.tabset}
+##### Status
+
+```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=7, fig.width=13}
+plot_sname <- ifelse(length(stream_list) == 1, site_df$SiteName[site_df$SiteCode == stream_list], 
+                     park_name)
+
+cat("<details open><summary class='drop'>Discharge vs. Precipitation</summary>")
+plotPrecipDischarge(park = parkcode, site = stream_list, years = yr_current)
+cat(paste0("<p style='width:1280px;'>Monthly discharge vs. Daily precipitation for ", yr_current, 
+    " in ", plot_sname, "</p>"))
+cat("</details>\n\n")
+```
+<br>
+
+##### Trends
+
+```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=7, fig.width=13}
+plot_sname <- ifelse(length(stream_list) == 1, site_df$SiteName[site_df$SiteCode == stream_list], 
+                     park_name)
+
+cat("<details open><summary class='drop'>Discharge</summary>")
+plotTrend(park = parkcode, site = stream_list, years = yr_start:yr_current, parameter = "Discharge_cfs", 
+          gridlines = "grid_x", months = 5:10, legend_position = "right")
+cat(paste0("<p style='width:1280px;'>Trends in monthly discharge for ", yr_start, " to ", yr_current, 
+    " in ", plot_sname, "</p>"))
+```
+<br>
+```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=3, fig.width=13}
+plotClimTrend(park = parkcode, years = yr_start:yr_current, parameter = 'ppt', 
+              palette = c("Set2"), months = 5:10, layers = 'bar', gridlines = "grid_x")
+cat(paste0(
+  "<p style='width:1280px;'>",
+  'Trends in monthly precipitation from May - October for ', plot_sname, 
+   ' from ',
+   yr_start, ' to ', yr_current, '.</p>\n\n'))
+```
+</details><br>
+
+#### Sampling History
+```{r}
+samp_hist <- sumEvents(park = parkcode, site_type = "stream", years = yr_start:yr_current) |> 
+  select(SiteName, param_type:Oct_cens) |> 
+  arrange(SiteName, param_type, Parameter)
+
+samp_tab <- 
+  kable(samp_hist, format = 'html', align = c(rep("l", 3), rep("c", 13)),
+        col.names = c("Site Name", "Param. Type", "Parameter", "Year Range",
+                      "# Years Sampled", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+                      "May cens.", "Jun cens.", "Jul cens.", "Aug cens.", "Sep cens.", "Oct cens.")) |> 
+  kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), full_width = FALSE,
+               position = 'left', font_size = 11) |> 
+  collapse_rows(1:2, valign = 'top') 
+
+samp_tab
+```
+
+### Climate {.tabset}
+
+```{r}
+yr5 = yr_current - 4
+drgt_cumppt_cap1 <- paste0("<p style = 'width:1280px;'>Weekly drought condition for ", yr_current, " based on proportion of a park's predominant county in each drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a> (left). Cumulative annual precipitation in ", yr_current, " by month compared to the 20th century baseline (right). Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>") 
+
+anom_comp_cap1 <- paste0("<p style = 'width:1280px;'>Current (", yr_current, ") monthly climate data (solid) with historic baselines (dashed; left). Monthly deviations from historic baselines in ", yr_current, " with positive (red) bars indicating above average deviations, and negative (blue) bars indicating below average deviations (right). Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Current monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>") 
+
+anom_cap5 <- paste0("<p style = 'width:1280px;'>Monthly deviations from historic baselines for past 5 years (", yr5, ":", yr_current, ") with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. 5-year  (", yr5, ":", yr_current, ") monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+cum_cap5 <- paste0("<p style = 'width:1280px;'>Cumulative annual precipitation by month for past 5 years (", yr5, ":", yr_current, " ) compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
+
+drgt_cap5 <- paste0("<p style = 'width:1280px;'>Last 5 years (", yr5, ":", yr_current, ") of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
+
+temp_capT <- paste0("<p style = 'width:1280px;'>Loess smoothed (span 0.3) minimum, maximum, and average temperature trends from 1900 to ", yr_current, " by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+ppt_capT <- paste0("<p style = 'width:1280px;'>Loess smoothed (span 0.3) total precipitation trends by month from 1900 to ", yr_current, " derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+anom_capT <- paste0("<p style = 'width:1280px;'>Monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations for 1900 to ", yr_current, ". Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+
+drgt_capT <- paste0("<p style = 'width:1280px;'>Long-term trends (2000:", yr_current, ") in weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>. Note that drought data are only available from 2000 to present.</p>") 
+
+```
+
+#### Current Year {.tabset}
+<h1>Current vs. 20th Century Baseline</h1>
+<details open><summary class='drop'>Temperature</summary>
+```{r fig.height=7, fig.width=13, results = 'asis'}
+temp_comp <- plotClimComps(park = parkcode, years = yr_current, palette = 'red', parameter = c('tmean'),
+                           legend_position = 'bottom', plot_title = F)
+temp_anom <- plotClimAnom(park = parkcode, years = yr_current, parameter = 'tmean',
+                          legend_position = 'bottom')
+grid.arrange(temp_comp, temp_anom, nrow = 1)
+
+cat(anom_comp_cap1, "\n\n")
+```
+
+</details>
+<br>
+<details open><summary class='drop'>Precipitation</summary>
+```{r fig.height=7, fig.width=13, results = 'asis'}
+ppt_comp <- plotClimComps(park = park,years= yr_current, palette = 'blue', parameter = c('ppt'),
+                           legend_position = "bottom", plot_title = F)
+ppt_anom <- plotClimAnom(park = parkcode, years = yr_current, parameter = 'ppt',
+                          legend_position = "bottom")
+grid.arrange(ppt_comp, ppt_anom, nrow = 1)
+
+cat(anom_comp_cap1, "\n\n")
+```
+</details>
+<br>
+<details open><summary class='drop'>Drought Condition</summary>
+```{r fig.height=7, fig.width=13, results = 'asis'}
+drgt <- plotClimDrought(park = parkcode, years = yr_current, legend_position = 'bottom')
+pptcum <- plotClimCumPrecip(park = parkcode, years = yr_current, legend_position = "bottom")
+cat("\n\n")
+grid.arrange(drgt, pptcum, nrow = 1)
+cat("\n\n")
+
+cat("\n", drgt_cumppt_cap1, "\n\n")
+```
+</details>
+<br>
+
+#### 5-year Trends {.tabset}
+<h1>5-year vs. 20th Century Baseline</h1>
+<details open><summary class='drop'>Temperature</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+yr1 = yr_current - 4
+plotClimAnom(park = parkcode, years = yr1:yr_current, parameter = 'tmean', legend_position = "bottom", gridlines = "grid_x")
+cat(anom_cap5, "\n\n")
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Total Precipitation</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimAnom(park = parkcode, years = yr1:yr_current, parameter = 'ppt', legend_position = "bottom", gridlines = "grid_x")
+cat(anom_cap5, "\n\n")
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Cumulative Precipitation</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimCumPrecip(park = parkcode, years = yr1:yr_current, legend_position = "bottom")
+
+cat(cum_cap5, "\n\n")
+
+```
+</details>
+</br>
+
+<details open><summary class='drop'>Drought Condition</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimDrought(park = parkcode, years = yr1:yr_current, gridlines = "grid_x", 
+                legend_position = "bottom")
+cat(drgt_cap5, "\n\n")
+```
+</details>
+</br>
+
+#### Long-term Trends {.tabset}
+<h1>Historic Trends 1900:2023</h1>
+<details open><summary class='drop'>Temperature Trends</summary>
+```{r fig.height=8, fig.width=13, results = "asis"}
+plotClimTrend(park = parkcode, years = 1900:yr_current, 
+              parameter = c("tmin", "tmax", "tmean"), facet_param = F,
+              palette = "Dark2", legend_position = "bottom", plot_se = T,
+              layers = "smooth", gridlines = "grid_x")
+cat(temp_capT, "\n\n")
+
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Temperature Anomalies</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimAnom(park = parkcode, years = 1900:yr_current, 
+              parameter = c("tmean"), legend_position = "bottom", gridlines = "grid_x")
+
+cat(anom_capT, "\n\n")
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Precipitation Trends</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimTrend(park = parkcode, years = 1900:yr_current, 
+              parameter = c("ppt"), facet_param = F, plot_se = T,
+              palette = "Dark2", legend_position = "bottom", 
+              layers = "smooth", gridlines = "grid_x")
+
+cat(ppt_capT, "\n\n")
+```
+</details>
+<br>
+
+<details open><summary class='drop'>Precipitation Anomalies</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimAnom(park = parkcode, years = 1900:yr_current, gridlines = "grid_x", 
+              parameter = c("ppt"), legend_position = "bottom")
+
+cat(anom_capT, "\n\n")
+```
+</details>
+<br>
+
+
+<details open><summary class='drop'>Drought Conditions</summary>
+```{r fig.height=8, fig.width=13, results = 'asis'}
+plotClimDrought(park = parkcode, years = 2000:yr_current, gridlines = "grid_x", 
+                legend_position = "bottom")
+
+cat(drgt_capT, "\n\n")
+```
+</details>
+<br>
+
+### About the Sites
+```{r out.width="80%", message=F}
+NPSbasic <- "https://atlas-stg.geoplatform.gov/styles/v1/atlas-user/ck58pyquo009v01p99xebegr9/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYXRsYXMtdXNlciIsImEiOiJjazFmdGx2bjQwMDAwMG5wZmYwbmJwbmE2In0.lWXK2UexpXuyVitesLdwUg"
+
+ESRIimagery <- "http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+
+ESRItopo <- "http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
+
+ESRINatGeo <- "http://services.arcgisonline.com/arcgis/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
+
+bbox <- read.csv("boundboxes.csv") #lat/long coordinates and zoom level for each park 
+
+# Find center coordinates of park box
+long_cent <- mean(c(bbox$LongE[bbox$ParkCode == park], bbox$LongW[bbox$ParkCode == park]))
+lat_cent <- mean(c(bbox$LatN[bbox$ParkCode == park], bbox$LatS[bbox$ParkCode == park]))
+
+# Compile water sites dataframe with codes, names, lat/long coordinates, and site type
+water_sites1 <- getSites(park = park)[,c("SiteCode", "SiteName", "SiteLatitude", "SiteLongitude",
+                                         "site_type", "SiteDescription")]
+
+years_active <- getEvents(park = parkcode, years = yr_start:yr_current, active = T) |> 
+  select(UnitCode, SiteCode, year) |> group_by(UnitCode, SiteCode) |> 
+  summarize(year_start = first(year), year_end = last(year), .groups = 'drop')
+
+
+water_sites <- left_join(water_sites1, years_active, by = c("SiteCode"))
+water_sites$Link = paste0("<a href='https://doimspp.sharepoint.com/sites/NETN_Photo_Viewer/Water_Quality_Site_Photos/", 
+                     water_sites$Site, ".jpg' target='_blank'>Site Photo</a>")
+
+# Legend html generator
+# Source: https://stackoverflow.com/questions/47064921/leaflet-legend-for-addawesomemarkers-function-with-icons
+# Icon library changed from font-awesome to ion
+
+markerLegendHTML <- function(IconSet) {
+    # Container div:
+    legendHtml <- "<div style='padding: 10px; padding-bottom: 10px;'>
+    <h4 style='padding-top:0; padding-bottom:10px; margin: 0; color:#555'> Legend </h4>" #legend title
+
+    n <- 1
+    # Add each icon for ion library icons:
+    for (Icon in IconSet) {
+        if (Icon[["library"]] == "ion") {
+        legendHtml<- 
+          paste0(legendHtml,
+          # marker and marker label div
+          "<div style='width: auto; height: 45px; display: flex; align-items: center;'>",
+          # awesome marker div
+          "<div style='position: relative; display: inline-block; width: 35px; height: 45px;' 
+          class='awesome-marker-icon-", Icon[["markerColor"]]," awesome-marker'>",
+          # add icons and set color
+          # class='ion ion-waterdrop icon-white' selects the correct library, icon, and color
+          "<i style='margin-left: 4px; margin-top: 11px' class= 'ion ion-",
+            Icon[["icon"]]," icon-", Icon[["iconColor"]],"'></i>",
+          "</div>", # close awesome marker div
+          # legend label div - use name set in IconSet
+          "<div style='position: relative; display: inline-block; margin-left: 8px;'>", 
+            names(IconSet)[n] ,"</div>",
+          "</div>") # close marker/marker label div    
+        }
+        n <- n + 1
+    } 
+    paste0(legendHtml, "</div>")
+}
+
+# Create list of icons to use in map
+IconSet <- awesomeIconList(
+  "stream" = makeAwesomeIcon(icon= 'waterdrop', markerColor = 'blue', iconColor = 'white', library = "ion"),
+  "lake" = makeAwesomeIcon(icon= 'waterdrop', markerColor = 'cadetblue', iconColor = 'white', library = "ion")
+)
+
+# Create leaflet map
+leaflet(height = 700) %>%
+    # set default view of park
+    setView(lng = long_cent,
+            lat = lat_cent,
+            zoom = bbox$Zoom[bbox$ParkCode == park]) %>%
+    # setMaxBounds(lng1 = bbox[bbox$ParkCode == parkcode,]$LongE,
+    #              lng2 = bbox[bbox$ParkCode == parkcode,]$LongW,
+    #              lat1 = bbox[bbox$ParkCode == parkcode,]$LatN,
+    #              lat2 = bbox[bbox$ParkCode == parkcode,]$LatS) %>%
+    # add map tiles
+    addTiles(group="Map", urlTemplate = NPSbasic, 
+             options = providerTileOptions(minZoom = bbox$minZoom[bbox$ParkCode == park])) %>%
+    addTiles(group="Imagery", urlTemplate = ESRIimagery) %>%
+    addTiles(group="Topo", urlTemplate = ESRItopo) %>%
+    addTiles(group="NatGeo", urlTemplate = ESRINatGeo) %>%
+    # add button to control map tiles
+    addLayersControl(map = ., baseGroups = c("Map","Imagery","Topo", "NatGeo"),
+                     options = layersControlOptions(collapsed=T)) %>%
+    # add site markers 
+    addAwesomeMarkers(data = water_sites, ~SiteLongitude, ~SiteLatitude, 
+                      icon = ~IconSet[site_type], #style markers based on site type
+                      # label on mouseover
+                      label=as.character(water_sites$SiteName),
+                      # popup on click
+                      popup = paste0("<b>", water_sites$SiteName, "</b><br>",
+                                     "<b>Type: </b>", water_sites$site_type, "<br>",
+                                     "<b>Sample Period: </b>", water_sites$year_start, "&ndash;",
+                                     water_sites$year_end, "<br>",
+                                     water_sites$SiteDescription, "<br>",
+                                     water_sites$Link
+                                     )
+                      ) %>%
+    # add legend
+    addControl(markerLegendHTML(IconSet = IconSet), position = "bottomleft")
+
+```
+

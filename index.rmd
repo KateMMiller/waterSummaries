@@ -36,7 +36,7 @@ for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
 child_env$yr_start <- yr_start
 child_env$yr_current <- yr_current
 child_env$yr_prev <- yr_prev
-child_env$park_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")  
+child_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")  
 ```
 
 <!-- Set up water band physical chunk that's iterated in park_level_summary -->
@@ -131,16 +131,27 @@ if(exists("wbplot_ANC") & exists("wbplot_ChlA")){
 
 ```
 
+
 ```{r results = 'asis', include = F}
-res <- lapply(seq_along(child_env$park_list), function(x){
-  child_env$park = child_env$park_list[[x]]
-  knitr::knit_child("park_level_summary.rmd", envir = child_env)
+acad <- lapply(seq_along(c("ACAD")), function(x){
+  child_env$park = "ACAD"
+  knitr::knit_child("ACAD_summary.rmd", envir = child_env)
+  #knitr::knit_child("About_tabs.Rmd", envir = child_env)
+  })
+
+cat(unlist(acad), sep = "\n\n")
+```
+
+```{r results = 'asis', include = F}
+lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
+  child_env$park = child_env$lnetn_list[[x]]
+  knitr::knit_child("LNETN_park_summary.rmd", envir = child_env)
   #knitr::knit_child("About_tabs.Rmd", envir = child_env)
   
 })
 ```
 ```{r results = 'asis'}
-cat(unlist(res), sep = "\n\n")
+cat(unlist(lnetn), sep = "\n\n")
 ```
 
 ```{r child = "About_tabs.Rmd", eval = T}
