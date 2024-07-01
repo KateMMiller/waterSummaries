@@ -149,10 +149,11 @@ cat("</details>\n\n")
 ```
 <br>
 
-```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=7, fig.width=13}
+```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=7, fig.width=13}
 cat("<details open><summary class='drop'>Lake Water Level</summary>")
 
-plot_lname <- ifelse(length(lake_list) == 1, site_df$SiteName[site_df$SiteCode == lake_list], 
+plot_lname <- ifelse(length(lake_list) == 1, 
+                     site_df$SiteName[site_df$SiteCode == lake_list], 
                      park_name)
 
 plotWaterBands(park = parkcode, site = lake_list, year_current = yr_current, 
@@ -195,7 +196,7 @@ cat(paste0(
 ```
 </details><br>
 
-```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=7, fig.width=13}
+```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=7, fig.width=13}
 cat("<details open><summary class='drop'>Lake Water Level</summary>")
 
 plot_lname <- ifelse(length(lake_list) == 1, site_df$SiteName[site_df$SiteCode == lake_list], 
@@ -227,23 +228,23 @@ cat(paste0(
 
 ```{r}
 yr5 = yr_current - 4
-drgt_cumppt_cap1 <- paste0("<p style = 'width:1280px;>Figure on the left shows weekly drought condition for ", yr_current, " based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>. Figure on the right shows cumulative annual precipitation in ", yr_current, " by month compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>") 
+drgt_cumppt_cap1 <- paste0("<p style = 'width:1280px;'>Weekly drought condition for ", yr_current, " based on proportion of a park's predominant county in each drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a> (left). Cumulative annual precipitation in ", yr_current, " by month compared to the 20th century baseline (right). Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>") 
 
-anom_comp_cap1 <- paste0("<p style = 'width:1280px;'>Figure on the left compares current (", yr_current, ") monthly climate data (solid) with historic baselines (dashed). Figure on the right represents monthly deviations from historic baselines in ", yr_current, " with positive (red) bars indicating above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Current monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>") 
+anom_comp_cap1 <- paste0("<p style = 'width:1280px;'>Current (", yr_current, ") monthly climate data (solid) with historic baselines (dashed; left). Monthly deviations from historic baselines in ", yr_current, " with positive (red) bars indicating above average deviations, and negative (blue) bars indicating below average deviations (right). Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Current monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>") 
 
-anom_cap5 <- paste0("<p style = 'width:1280px;'>Figure represents monthly deviations from historic baselines for past 5 years (", yr5, ":", yr_current, ") with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. 5-year  (", yr5, ":", yr_current, ") monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+anom_cap5 <- paste0("<p style = 'width:1280px;'>Monthly deviations from historic baselines for past 5 years (", yr5, ":", yr_current, ") with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations. Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. 5-year  (", yr5, ":", yr_current, ") monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
 
-cum_cap5 <- paste0("<p style = 'width:1280px;'>Figure shows cumulative annual precipitation by month for past 5 years (", yr5, ":", yr_current, " ) compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
+cum_cap5 <- paste0("<p style = 'width:1280px;'>Cumulative annual precipitation by month for past 5 years (", yr5, ":", yr_current, " ) compared to the 20th century baseline. Total monthly precipitation data are derived from  <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA monthly NClimGrid gridded climate data</a> extracted for a given park's geographic centroid.</p>")
 
-drgt_cap5 <- paste0("<p style = 'width:1280px;'>Figure shows last 5 years (", yr5, ":", yr_current, ") of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
+drgt_cap5 <- paste0("<p style = 'width:1280px;'>Last 5 years (", yr5, ":", yr_current, ") of weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>.</p>") 
 
-temp_capT <- paste0("<p style = 'width:1280px;'>Figure shows loess smoothed (span 0.3) minimum, maximum, and average temperature trends from 1900 to ", yr_current, " by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+temp_capT <- paste0("<p style = 'width:1280px;'>Loess smoothed (span 0.3) minimum, maximum, and average temperature trends from 1900 to ", yr_current, " by month derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
 
-ppt_capT <- paste0("<p style = 'width:1280px;'>Figure shows loess smoothed (span 0.3) total precipitation trends by month from 1900 to ", yr_current, " derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+ppt_capT <- paste0("<p style = 'width:1280px;'>Loess smoothed (span 0.3) total precipitation trends by month from 1900 to ", yr_current, " derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
 
-anom_capT <- paste0("<p style = 'width:1280px;'>Figure represents monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations for 1900 to ", yr_current, ". Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
+anom_capT <- paste0("<p style = 'width:1280px;'>Monthly deviations from historic baselines, with positive (red) bars, indicated above average deviations, and negative (blue) bars indicating below average deviations for 1900 to ", yr_current, ". Historic baselines are based on <a href='https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals'>NOAA 20th century normals</a> for a given park's geographic centroid. Monthly data are derived from <a href='https://www.ncei.noaa.gov/access/metadata/landing-page/bin/iso?id=gov.noaa.ncdc:C00332'>NOAA NClimGrid </a> gridded climate dataset extracted for a given park's geographic centroid.</p>")
 
-drgt_capT <- paste0("<p style = 'width:1280px;'>Figure shows long-term trends (2000:", yr_current, ") in weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>. Note that drought data are only available from 2000 to present.</p>") 
+drgt_capT <- paste0("<p style = 'width:1280px;'>Long-term trends (2000:", yr_current, ") in weekly drought condition based on proportion of a park's predominant county by drought level using the <a href='https://droughtmonitor.unl.edu/'>U.S. Drought Monitor</a>. Note that drought data are only available from 2000 to present.</p>") 
 
 ```
 
@@ -278,10 +279,11 @@ cat(anom_comp_cap1, "\n\n")
 ```{r fig.height=7, fig.width=13, results = 'asis'}
 drgt <- plotClimDrought(park = parkcode, years = yr_current, legend_position = 'bottom')
 pptcum <- plotClimCumPrecip(park = parkcode, years = yr_current, legend_position = "bottom")
+cat("\n\n")
 grid.arrange(drgt, pptcum, nrow = 1)
 cat("\n\n")
 
-cat(drgt_cumppt_cap1, "\n\n")
+cat("\n", drgt_cumppt_cap1, "\n\n")
 ```
 </details>
 <br>

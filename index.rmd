@@ -36,7 +36,7 @@ for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
 child_env$yr_start <- yr_start
 child_env$yr_current <- yr_current
 child_env$yr_prev <- yr_prev
-child_env$park_list <- c("MABI", "WEFA") # Not sure why I can't run for all the parks
+child_env$park_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")  
 ```
 
 <!-- Set up water band physical chunk that's iterated in park_level_summary -->
