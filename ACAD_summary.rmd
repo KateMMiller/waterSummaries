@@ -28,17 +28,17 @@ library(gridExtra)
 library(kableExtra)
 #library(plotly)
 ```
-```{r results = 'hide', cache = T, eval = T}
+```{r results = 'hide', cache = T, eval = F}
 importData()
 ```
 
 ```{r }
 # park = "ACAD"; yr_start = 2006; yr_current = 2023;
 parkcode <- "ACAD" #child_env$park
-park = parkcode
-yr_start <- params$year_start
-yr_current <- params$year_current
-yr_prev <- yr_current - 1
+# park = parkcode
+# yr_start <- params$year_start
+# yr_current <- params$year_current
+# yr_prev <- yr_current - 1
 
 site_df <- unique(getEvents(park = "ACAD", years = yr_current)[, c("SiteCode", "SiteName", "UnitCode", "UnitName", "SiteType")])
 #site_df <- getSites(park = parkcode)[,c("SiteCode", "SiteName", "UnitCode", "UnitName")]
@@ -53,100 +53,9 @@ eval_lake <- if(!is.null(lake_list)){TRUE} else {FALSE}
 source("fake_bands_legend_code.R") # for legend called legg
 ```
 
-<!-- Remove after working -->
-```{r waterbandp_chunk, warning = F, message = FALSE, eval = FALSE}
-wbplot_DO <- 
-plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "DO_mgL") 
-
-wbplot_pH <- 
-plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "pH")
-
-wbplot_sc <- 
-plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "SpCond_uScm")
-
-wbplot_temp <- 
-plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "Temp_C")
-
-wbn_plot <- 
-grid.arrange(wbplot_DO, wbplot_pH, wbplot_temp, wbplot_sc, legg, 
-             layout_matrix = rbind(c(1, 2),
-                                   c(3, 4),
-                                   c(5, 5)),
-             heights = c(0.5, 0.5,  0.25),
-             nrow = 3, ncol = 2)
-
-wbn_plot
-
-```
-
-<!-- Remove after working -->
-
-```{r waterbandn_chunk, warning = F, message = FALSE, eval = FALSE}
-wbplot_TN <- 
-plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "TN_mgL") 
-
-wbplot_TP <- 
-plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "TP_ugL")
-
-wbplot_ANC <- 
-tryCatch(plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "ANC_ueqL"),
-    error = function(e){NULL})
-
-wbplot_ChlA <- 
-tryCatch(plotWaterBands(site = sitecode, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, 
-               parameter = "ChlA_ugL"), 
-    error = function(e){NULL})
-
-wbp_plot <- 
-if(exists("wbplot_ANC") & exists("wbplot_ChlA")){
-  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ANC, wbplot_ChlA, legg,
-               layout_matrix = rbind(c(1, 2),
-                                     c(3, 4),
-                                     c(5, 5)),
-               heights = c(0.5, 0.5,  0.25),
-               nrow = 3, ncol = 2)
-} else if(exists("wbplot_ANC")){
-  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ANC, legg,
-               layout_matrix = rbind(c(1, 2),
-                                     c(3, NA),
-                                     c(4, 4)),
-               heights = c(0.5, 0.5,  0.25),
-               nrow = 3, ncol = 2)
-} else if(exists("wbplot_ChlA")){
-  grid.arrange(wbplot_TN, wbplot_TP, wbplot_ChlA, legg,
-               layout_matrix = rbind(c(1, 2),
-                                     c(3, NA),
-                                     c(4, 4)),
-               heights = c(0.5, 0.5,  0.25),
-               nrow = 3, ncol = 2)
-} else {
-  grid.arrange(wbplot_TN, wbplot_TP, legg,
-               layout_matrix = rbind(c(1, 2),
-                                     c(3, 3),
-               heights = c(0.9, 0.25),
-               nrow = 2, ncol = 2))
-}
 
 
-```
-
-
-##  `r park` {.tabset}
+## ACAD {.tabset}
 ### Lakes {.tabset}
 <!-- Plots for lakes only -->
 #### Water Quality  {.tabset}
@@ -206,7 +115,7 @@ for(i in seq_along(lake_list)){
 
 ##### Trends {.tabset}
 ```{r warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
-sonde_params <- c("DO_mgL", "pH", "Temp_C", "SpCond_uScm")
+sonde_params <- c("DO_mgL", "pH", "Temp_F", "SpCond_uScm")
 chem_params <- c("TN_mgL", "TP_ugL", "ANC_ueqL")#, "ChlA_ugL")
 
 cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
@@ -240,7 +149,7 @@ plot_lname <- ifelse(length(lake_list) == 1,
 
 plotWaterBands(park = parkcode, site = lake_list, year_current = yr_current, 
                years_historic = yr_start:yr_prev, parameter = "WaterLevel_Feet", 
-               scales = "free_y")
+               facet_scales = "free_y")
 
 cat(paste0(
   "<p style='width:1280px;'>",
@@ -274,7 +183,7 @@ cat(paste0(
 <br>
 ```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=3, fig.width=13}
 plotClimTrend(park = parkcode, years = 2013:yr_current, parameter = 'ppt', palette = c("Set2"), 
-              months = 5:10, layers = 'bar', gridlines = "grid_x")
+              months = 5:10, layers = 'bar', gridlines = "grid_x", units = "eng")
 cat(paste0(
   "<p style='width:1280px;'>",
   'Trends in monthly precipitation from May to October for ', plot_lname, 
@@ -284,28 +193,22 @@ cat(paste0(
 </details><br>
 
 #### Lake Profiles {.tabset}
-<!-- Move to index after working -->
 ```{r}
-param_list <- c("DO_mgL", "Temp_C", "pH", "SpCond_uScm", "ChlA_ugL")#, "Turbidity_FNU")
+param_list <- c("DO_mgL", "Temp_F", "pH", "SpCond_uScm", "ChlA_ugL")#, "Turbidity_FNU")
 param_name <- c("Dissolved Oxygen (mgL)", "Temperature (C)", "pH", "Specific Conductance (uScm)",
                 "Chlorophyll A (ugL)")#, "Turbidity (FNU)")
-param_df <- data.frame(param = param_list, param_name = param_name)
+palette_list <- c("RdYlBu", "RdYlBu", "RdYlBu", "RdYlBu", "RdYlBu")
+palette_rev <- c(TRUE, FALSE, TRUE, FALSE, FALSE)
+param_df <- data.frame(param = param_list, param_name = param_name, pal = palette_list, rev = palette_rev)
 ```
 
 ##### Status
-```{r prof_stat, results = 'asis', eval = F}
-cat(paste0("<details open><summary class = 'drop'>", param_name, "</summary>", "\n\n"))
-cat("\n\n")
-prof_splot <- plotLakeProfile(site = lake_list, years = yr_current, parameter = param)
-print(prof_splot)
-cat("\n\n")
-cat(paste0("<p style='width:1280px;'>Depth profiles of ", param_name, " for ", yr_current, "</p>", "\n\n"))
-cat("</details>", "\n\n")
-```
 
 ```{r results = 'asis', fig.height = 9, fig.width = 13}
 for(i in seq_along(param_list)){
   param = param_df$param[[i]]
+  pal = param_df$pal[param_df$param == param]
+  rev = param_df$rev[param_df$param == param]
   param_name = param_df$param_name[param_df$param == param]
 
   <<prof_stat>>
@@ -313,19 +216,6 @@ for(i in seq_along(param_list)){
 ```
 
 ##### Trends {.tabset}
-<!-- Move to index after working -->
-```{r prof_trend, results = 'asis', eval = F}
-cat(paste0("<details open><summary class = 'drop'>", param_name, "</summary>", "\n\n"))
-sitename = site_df$SiteName[site_df$SiteCode==sitecode]
-cat("\n\n")
-prof_tplot <- plotLakeProfile(site = sitecode, years = yr_start:yr_current, parameter = param)
-print(prof_tplot)
-cat("\n\n")
-cat(paste0("<p style='width:1280px;'>Depth profiles in ", sitename, " for ", param_name, " from ", yr_start, 
-    " to ", yr_current, "</p>"))
-cat("</details>", "\n\n")
-```
-
 
 ```{r results = 'asis', fig.height = 9, fig.width = 13}
 for(i in seq_along(lake_list)){
@@ -333,6 +223,8 @@ for(i in seq_along(lake_list)){
   cat("###### ", sitecode, "\n\n")
   for(j in seq_along(param_list)){
   param = param_df$param[[j]]
+  pal = param_df$pal[param_df$param == param]
+  rev = param_df$rev[param_df$param == param]
   param_name = param_df$param_name[param_df$param == param]
   
   <<prof_trend>>
@@ -421,7 +313,7 @@ for(i in seq_along(stream_list)){
 
 ##### Trends {.tabset}
 ```{r warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
-sonde_params <- c("DO_mgL", "pH", "Temp_C", "SpCond_uScm")
+sonde_params <- c("DO_mgL", "pH", "Temp_F", "SpCond_uScm")
 chem_params <- c("TN_mgL", "TP_ugL", "ANC_ueqL")#, "ChlA_ugL")
 
 cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
@@ -473,7 +365,7 @@ cat(paste0("<p style='width:1280px;'>Trends in monthly discharge for ", yr_start
 <br>
 ```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=3, fig.width=13}
 plotClimTrend(park = parkcode, years = yr_start:yr_current, parameter = 'ppt', 
-              palette = c("Set2"), months = 5:10, layers = 'bar', gridlines = "grid_x")
+              palette = c("Set2"), months = 5:10, layers = 'bar', gridlines = "grid_x", units = "eng")
 cat(paste0(
   "<p style='width:1280px;'>",
   'Trends in monthly precipitation from May - October for ', plot_sname, 
@@ -529,9 +421,9 @@ drgt_capT <- paste0("<p style = 'width:1280px;'>Long-term trends (2000:", yr_cur
 <details open><summary class='drop'>Temperature</summary>
 ```{r fig.height=7, fig.width=13, results = 'asis'}
 temp_comp <- plotClimComps(park = parkcode, years = yr_current, palette = 'red', parameter = c('tmean'),
-                           legend_position = 'bottom', plot_title = F)
+                           legend_position = 'bottom', plot_title = F, units = "eng")
 temp_anom <- plotClimAnom(park = parkcode, years = yr_current, parameter = 'tmean',
-                          legend_position = 'bottom')
+                          legend_position = 'bottom', units = "eng")
 grid.arrange(temp_comp, temp_anom, nrow = 1)
 
 cat(anom_comp_cap1, "\n\n")
@@ -542,8 +434,8 @@ cat(anom_comp_cap1, "\n\n")
 <details open><summary class='drop'>Precipitation</summary>
 ```{r fig.height=7, fig.width=13, results = 'asis'}
 ppt_comp <- plotClimComps(park = park,years= yr_current, palette = 'blue', parameter = c('ppt'),
-                           legend_position = "bottom", plot_title = F)
-ppt_anom <- plotClimAnom(park = parkcode, years = yr_current, parameter = 'ppt',
+                           legend_position = "bottom", plot_title = F, units = "eng")
+ppt_anom <- plotClimAnom(park = parkcode, years = yr_current, parameter = 'ppt_pct',
                           legend_position = "bottom")
 grid.arrange(ppt_comp, ppt_anom, nrow = 1)
 
@@ -554,7 +446,7 @@ cat(anom_comp_cap1, "\n\n")
 <details open><summary class='drop'>Drought Condition</summary>
 ```{r fig.height=7, fig.width=13, results = 'asis'}
 drgt <- plotClimDrought(park = parkcode, years = yr_current, legend_position = 'bottom')
-pptcum <- plotClimCumPrecip(park = parkcode, years = yr_current, legend_position = "bottom")
+pptcum <- plotClimCumPrecip(park = parkcode, years = yr_current, legend_position = "bottom", units = "eng")
 cat("\n\n")
 grid.arrange(drgt, pptcum, nrow = 1)
 cat("\n\n")
@@ -569,7 +461,8 @@ cat("\n", drgt_cumppt_cap1, "\n\n")
 <details open><summary class='drop'>Temperature</summary>
 ```{r fig.height=8, fig.width=13, results = 'asis'}
 yr1 = yr_current - 4
-plotClimAnom(park = parkcode, years = yr1:yr_current, parameter = 'tmean', legend_position = "bottom", gridlines = "grid_x")
+plotClimAnom(park = parkcode, years = yr1:yr_current, parameter = 'tmean', 
+             legend_position = "bottom", gridlines = "grid_x", units = "eng")
 cat(anom_cap5, "\n\n")
 ```
 </details>
@@ -577,7 +470,8 @@ cat(anom_cap5, "\n\n")
 
 <details open><summary class='drop'>Total Precipitation</summary>
 ```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimAnom(park = parkcode, years = yr1:yr_current, parameter = 'ppt', legend_position = "bottom", gridlines = "grid_x")
+plotClimAnom(park = parkcode, years = yr1:yr_current, parameter = 'ppt_pct', 
+             legend_position = "bottom", gridlines = "grid_x")
 cat(anom_cap5, "\n\n")
 ```
 </details>
@@ -585,7 +479,7 @@ cat(anom_cap5, "\n\n")
 
 <details open><summary class='drop'>Cumulative Precipitation</summary>
 ```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimCumPrecip(park = parkcode, years = yr1:yr_current, legend_position = "bottom")
+plotClimCumPrecip(park = parkcode, years = yr1:yr_current, legend_position = "bottom", units = "eng")
 
 cat(cum_cap5, "\n\n")
 
@@ -609,7 +503,7 @@ cat(drgt_cap5, "\n\n")
 plotClimTrend(park = parkcode, years = 1900:yr_current, 
               parameter = c("tmin", "tmax", "tmean"), facet_param = F,
               palette = "Dark2", legend_position = "bottom", plot_se = T,
-              layers = "smooth", gridlines = "grid_x")
+              layers = "smooth", gridlines = "grid_x", units = "eng")
 cat(temp_capT, "\n\n")
 
 ```
@@ -618,7 +512,7 @@ cat(temp_capT, "\n\n")
 
 <details open><summary class='drop'>Temperature Anomalies</summary>
 ```{r fig.height=8, fig.width=13, results = 'asis'}
-plotClimAnom(park = parkcode, years = 1900:yr_current, 
+plotClimAnom(park = parkcode, years = 1900:yr_current, units = "eng", 
               parameter = c("tmean"), legend_position = "bottom", gridlines = "grid_x")
 
 cat(anom_capT, "\n\n")
@@ -631,7 +525,7 @@ cat(anom_capT, "\n\n")
 plotClimTrend(park = parkcode, years = 1900:yr_current, 
               parameter = c("ppt"), facet_param = F, plot_se = T,
               palette = "Dark2", legend_position = "bottom", 
-              layers = "smooth", gridlines = "grid_x")
+              layers = "smooth", gridlines = "grid_x", units = "eng")
 
 cat(ppt_capT, "\n\n")
 ```
@@ -641,7 +535,7 @@ cat(ppt_capT, "\n\n")
 <details open><summary class='drop'>Precipitation Anomalies</summary>
 ```{r fig.height=8, fig.width=13, results = 'asis'}
 plotClimAnom(park = parkcode, years = 1900:yr_current, gridlines = "grid_x", 
-              parameter = c("ppt"), legend_position = "bottom")
+              parameter = c("ppt_pct"), legend_position = "bottom")
 
 cat(anom_capT, "\n\n")
 ```
