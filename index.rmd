@@ -20,6 +20,7 @@ knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FA
 # Create environment for rmds to pull params from
 library(tidyverse)
 library(waterNETN)
+library(climateNETN)
 library(leaflet)
 library(grid)
 library(gridExtra)
