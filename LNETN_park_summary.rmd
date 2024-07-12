@@ -44,10 +44,10 @@ site_df <- unique(getEvents(park = parkcode, years = yr_current)[, c("SiteCode",
 site_list <- unique(site_df$SiteCode)
 park_name <- unique(site_df$UnitName)
 site_name <- unique(site_df$SiteName)
-stream_list <- tryCatch(getSites(park = parkcode, site_type = 'stream')$SiteCode, 
-                        error = function(e){NULL})
-lake_list <- tryCatch(getSites(park = parkcode, site_type = 'lake')$SiteCode, 
-                      error = function(e){NULL})
+stream_list <- unique(tryCatch(getSites(park = parkcode, site_type = 'stream')$SiteCode, 
+                        error = function(e){NULL}))
+lake_list <- unique(tryCatch(getSites(park = parkcode, site_type = 'lake')$SiteCode, 
+                      error = function(e){NULL}))
 eval_stream <- if(!is.null(stream_list)){TRUE} else {FALSE}
 eval_lake <- if(!is.null(lake_list)){TRUE} else {FALSE}
 
@@ -121,7 +121,7 @@ cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n"
 plotTrend(park = parkcode, years = yr_start:yr_current, parameter = sonde_params, 
           smooth = T, span = 0.5, legend_position = "bottom", threshold = F, numcol = 2)
 
-cat(paste0("<p style='width:1280px;'>Trends in field water quality parameters for ", sitename, " from ",
+cat(paste0("<p style='width:1280px;'>Trends in field water quality parameters for ", park_name, " from ",
            yr_start, " to ", yr_current, ". Points represent monthly sample measurements.", 
            " Lines represent loess smoothed trends with span 0.5.</p></details>\n\n"))
 
