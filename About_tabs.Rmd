@@ -26,9 +26,9 @@ degree <- htmltools::HTML("&#176;", .noWS = "outside")
 
 ```
 
-## About the Data
+## About the Data {.tabset}
 
-<details open><summary><h2>Background</h2></summary>
+### Background
 
 Freshwater resources are affected and stressed by natural and anthropogenic (human) impacts and alterations. Current and historic threats to aquatic ecosystems in NPS units throughout the northeastern U.S. have led to specific physical, biological, or chemical stressors to the freshwater ecosystems. The documentation of baseline water quality and water quantity is essential to the long-term maintenance of freshwater resources and for interpreting changes (natural or anthropogenic) that are occurring within and surrounding parks. Monitoring water resources assists natural resource managers in identifying and addressing stressors in park freshwater ecosystems.
 
@@ -36,9 +36,7 @@ The Northeast Temperate Network monitors freshwater bodies to assess the status 
 
 More information about this monitoring program can be found on the <a href = "https://www.nps.gov/im/netn/water-quality-quantity-monitoring.htm">NETN Water Quality and Quantity Website</a>. Additional resources can be found in the <a href = "https://irma.nps.gov/DataStore/Reference/Profile/2190885">NETN Lake, Pond, & Stream Monitoring Program in the Data Store</a> (Reference 2190885), including the latest <a href = "https://irma.nps.gov/DataStore/Reference/Profile/2229872">monitoring protocol</a> and <a href = "https://irma.nps.gov/DataStore/SavedSearch/Profile/1456">summary reports</a>. If you have questions about the program or this report, please contact <a href = "mailto:Bill_Gawley@nps.gov">Bill Gawley</a>, NETN Physical Scientist.
 
-</details>
-<br>
-<details open><summary><h2>Monitoring Methods</h2></summary>
+### Monitoring Methods
 
 <h3>Monitoring Frequency</h3> NETN water monitoring sites are sampled monthly from May through October, and most sites are visited annually. Some ACAD sites are visited on a 2-year (streams) or 3-year (lakes) rotating schedule. Each month, field crews measure physical and in situ water quality parameters and collect water samples for chemical analysis at the University of Maine’s Sawyer Environmental Research Center.
 
@@ -59,9 +57,7 @@ htmltools::withTags(body(
 
 ```
 
-</details>
-<br>
-<details open><summary><h2>Field Measurement Metrics</h2></summary>
+### Field Measurement Metrics
 
 ```{r physical, results='asis'}
 
@@ -94,9 +90,7 @@ htmltools::withTags(body(
 
 ```
 
-</details>
-<br>
-<details open><summary><h2>Lab Chemistry Metrics</h2></summary>
+### Lab Chemistry Metrics
 
 ```{r nutrients, results='asis'}
 
@@ -121,9 +115,7 @@ htmltools::withTags(body(
 
 ```
 
-</details>
-<br>
-<details open><summary><h2>Water Quality Thresholds and Criteria</h2></summary>
+### Water Quality Thresholds and Criteria
 
 <h3>EPA Ecoregional Nutrient Criteria</h3> EPA water quality criteria by Ecoregion are used as a benchmark in this summary. EPA water quality criteria for nutrients help translate narrative criteria within State or Tribal water quality standards by establishing values for causal variables (e.g., total nitrogen and total phosphorus) and response variables (e.g., turbidity and chlorophyll a). Causal variables are necessary to provide sufficient protection of designated uses before impairment occurs and to maintain downstream uses. Early response variables are necessary to provide warning signs of possible impairment and to integrate the effects of variable and potentially unmeasured nutrient loads.
 
@@ -429,4 +421,3 @@ note
 
 ```
 
-</details>
