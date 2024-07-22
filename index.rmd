@@ -37,7 +37,8 @@ for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
 child_env$yr_start <- yr_start
 child_env$yr_current <- yr_current
 child_env$yr_prev <- yr_prev
-child_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")  
+child_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA") 
+child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")
 ```
 
 ```{r child = "Iterative_code_chunks.Rmd", eval = T}
