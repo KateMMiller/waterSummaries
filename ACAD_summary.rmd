@@ -249,7 +249,7 @@ cat(paste0(
 <br>
 ```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=3, fig.width=13}
 plotClimBar(park = parkcode, years = 2013:yr_current, parameter = 'ppt', palette = c("#1378b5"), 
-            months = 5:10, layers = 'bar', gridlines = "grid_x", units = "eng")
+            months = 5:10, gridlines = "grid_x", units = "eng")
 cat(paste0(
   "<p style='width:1280px;'>",
   'Trends in monthly precipitation from May to October for ', plot_lname, 
