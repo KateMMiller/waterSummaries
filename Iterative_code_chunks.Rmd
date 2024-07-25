@@ -95,7 +95,7 @@ if(exists("wbplot_ANC") & exists("wbplot_ChlA")){
                nrow = 2, ncol = 2))
 }
 
-
+wbp_plot
 ```
 
 <!-- Lake Profile Code Chunk for status -->
@@ -122,3 +122,4 @@ cat(paste0("<p style='width:1280px;'>Depth profiles in ", sitename, " for ", par
     " to ", yr_current, "</p>"))
 cat("</details>", "\n\n")
 ```
+
