@@ -31,7 +31,8 @@ yr_prev <- yr_current - 1
 #park_list <- c("MIMA")
 
 child_env <- new.env()
-importData()
+importData(type = "zip", filepath = "C:/NETN/R_Dev/Water/data/NETN_Water_Data_Package_20240725.zip")
+#importData()
 for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
 
 child_env$yr_start <- yr_start
