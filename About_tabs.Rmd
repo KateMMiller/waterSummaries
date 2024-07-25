@@ -28,16 +28,16 @@ degree <- htmltools::HTML("&#176;", .noWS = "outside")
 
 ## About the Data {.tabset}
 
-### Background
-
+### Background {.tabset}
+<p style='width:1280px;'>
 Freshwater resources are affected and stressed by natural and anthropogenic (human) impacts and alterations. Current and historic threats to aquatic ecosystems in NPS units throughout the northeastern U.S. have led to specific physical, biological, or chemical stressors to the freshwater ecosystems. The documentation of baseline water quality and water quantity is essential to the long-term maintenance of freshwater resources and for interpreting changes (natural or anthropogenic) that are occurring within and surrounding parks. Monitoring water resources assists natural resource managers in identifying and addressing stressors in park freshwater ecosystems.
 
 The Northeast Temperate Network monitors freshwater bodies to assess the status of and changes in their physical, chemical, and biological attributes. Sampling is performed monthly from May through October. All monitoring data are incorporated into a comprehensive database that feeds into an Environmental Protection Agency data system.
 
 More information about this monitoring program can be found on the <a href = "https://www.nps.gov/im/netn/water-quality-quantity-monitoring.htm">NETN Water Quality and Quantity Website</a>. Additional resources can be found in the <a href = "https://irma.nps.gov/DataStore/Reference/Profile/2190885">NETN Lake, Pond, & Stream Monitoring Program in the Data Store</a> (Reference 2190885), including the latest <a href = "https://irma.nps.gov/DataStore/Reference/Profile/2229872">monitoring protocol</a> and <a href = "https://irma.nps.gov/DataStore/SavedSearch/Profile/1456">summary reports</a>. If you have questions about the program or this report, please contact <a href = "mailto:Bill_Gawley@nps.gov">Bill Gawley</a>, NETN Physical Scientist.
-
+</p>
 ### Monitoring Methods
-
+<p style='width:1280px;'>
 <h3>Monitoring Frequency</h3> NETN water monitoring sites are sampled monthly from May through October, and most sites are visited annually. Some ACAD sites are visited on a 2-year (streams) or 3-year (lakes) rotating schedule. Each month, field crews measure physical and in situ water quality parameters and collect water samples for chemical analysis at the University of Maine’s Sawyer Environmental Research Center.
 
 <h3>Field Measurements</h3> Temperature, dissolved oxygen, pH, specific conductance, and turbidity are measured with a multiparameter sonde. In lakes, a series of measurements taken at 1 m increments through the water column create a water quality profile, documenting conditions at various depths and lake stratification (when present). In streams, the sonde is deployed in the centroid of the stream flow and a single measurement of each parameter is recorded at each site visit. <strong><em>Note:</strong> Lake water quality values presented in this report are derived from measurements taken from the top 2 meters of the profile, and represent conditions in the lake surface layer (epilimnion).</em>
@@ -45,7 +45,7 @@ More information about this monitoring program can be found on the <a href = "ht
 Stream flow (discharge) is measured at each site using U.S. Geological Survey protocols. A measuring tape is used to measure a cross-section of the stream, and water velocity is recorded using a wading rod and mechanical or Doppler current meter. 
 
 Transparency (water clarity) in lakes is measured with a 20 cm (8 in) Secchi disk fastened to a measuring tape and observed with a viewing scope. Light penetration profiles are recorded using two solar radiation sensors and a datalogger. 
-
+</p>
 
 ```{r sample_collection, results='asis'}
 
@@ -114,6 +114,17 @@ htmltools::withTags(body(
     ))
 
 ```
+
+### Lake Trophic Type
+Trophic status of lakes is based on the amount of biological productivity. In ACAD, the primary states are: 
+<ul>
+<li><b>Eutrophic:</b> lakes are the most productive types of lake in Acadia, with more nutrients and plant and/or algae growth and less clear water (e.g., Aunt Betty's Pond and Seawall Pond).</li>
+<li><b>Oligotrophic:</b> lakes are nutrient-poor with few plants/algae and clearer water (e.g., Eagle Lake and Jordan Pond).</li> 
+<li><b>Mesotrophic:</b> lakes that are in between Eutrophic and Oligotrophic (e.g. Bubble Pond and Witch Hole Pond).</li>
+</ul> 
+
+### Stream Fishery Type
+Cold water or warm water stream types support different fish and other aquatic species. Cold water streams, such as Duck Brook or Stanley Brook, typically remain below 19 degrees C are well-oxygenated, and can support cold water species like brook trout. Warm water streams, such as Aunt Betty's Pond Inlet, or Lake Wood Outlet may exceed 19 degrees C and have less dissolved oxygen than cold water streams.
 
 ### Water Quality Thresholds and Criteria
 
