@@ -24,6 +24,8 @@ library(climateNETN)
 library(leaflet)
 library(grid)
 library(gridExtra)
+library(kableExtra)
+#library(plotly)
 
 yr_start <- params$year_start
 yr_current <- params$year_current
@@ -45,19 +47,34 @@ child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA",
 ```{r child = "Iterative_code_chunks.Rmd", eval = T}
 
 ```
+## Welcome {.tabset}
+<h1>Northeast Temperate Network Water Quality Summary for `r yr_current`</h1>
 
-```{r results = 'asis', include = F}
+<p>Welcome to the Northeast Temperate Network (NETN) water quality summaries website. This website is updated annually, following the latest field season, and after the data have undergone quality assurance and quality control procedures. </p>
+<br>
+<p>This site features water quality summaries from all of parks within the Network that participate in the freshwater monitoring protocol. To see more specific information about an individual park and its study sites, click on the park’s tab at the top of the page and navigate through the water quality, water quantity, climate and related tabs. To learn more about our monitoring methods, the field and lab chemistry metrics, and the water quality thresholds used in this report, please visit the “About the Data” tab. Additional information is also available on the <a href = "https://nps.gov/im/netn/">NETN homepage</a></p>
+<br>
+<br>
+<br>
+```{r out.width = "1250px"}
+knitr::include_graphics("./www/SAGASA_20240620_PP_DS.jpg")
+```
+<br>
+<br>
+Photo looking downstream of Blow-Me-Up Brook monitoring location in Saint-Gaudens National Historical Park, June 2024.
+
+```{r results = 'asis', include = F, eval = T}
 acad <- lapply(seq_along(c("ACAD")), function(x){
   child_env$park = "ACAD"
   knitr::knit_child("ACAD_summary.rmd", envir = child_env)
   #knitr::knit_child("About_tabs.Rmd", envir = child_env)
   })
 ```
-```{r results = 'asis'}
+```{r results = 'asis', eval = T}
 cat(unlist(acad), sep = "\n\n")
 ```
 
-```{r results = 'asis', include = F}
+```{r results = 'asis', include = F, eval = T}
 lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
   child_env$park = child_env$lnetn_list[[x]]
   knitr::knit_child("LNETN_park_summary.rmd", envir = child_env)
@@ -65,7 +82,7 @@ lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
   
 })
 ```
-```{r results = 'asis'}
+```{r results = 'asis', eval = T}
 cat(unlist(lnetn), sep = "\n\n")
 ```
 

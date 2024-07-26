@@ -26,10 +26,10 @@ library(leaflet)
 library(grid)
 library(gridExtra)
 library(kableExtra)
-library(plotly)
+#library(plotly)
 ```
 ```{r results = 'hide', cache = T, eval = F}
-importData()
+#importData()
 ```
 
 ```{r }
@@ -56,22 +56,23 @@ source("fake_bands_legend_code.R") # for legend called legg
 
 ##  `r park` {.tabset}
 ### Water Quality  {.tabset}
-
-#### Status {.tabset}
-
 ```{r warning = FALSE, message = FALSE, results = 'asis', fig.height=9, fig.width=13}
 for(i in seq_along(site_list)){
+  field_params = c("DO_mgL", "pH", "Temp_F", "SpCond_uScm")
+  lab_params = c("TN_mgL", "TP_ugL", "ANC_ueqL")
+
   sitename <- site_df[i, "SiteName"]
   sitecode <- site_list[i]
-  cat("##### ", sitename, "{.tabset} \n\n")
+  cat("#### ", sitename, "{.tabset} \n\n")
+  cat(paste0("<details open><summary class = 'drop'>Summary of Current Year (", yr_current, ") </summary>"))
   cat("\n\n")
-  cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
-  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ")</h1>\n\n"))
+  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, 
+             ") Field Measurements</h1>\n\n"))
 
   <<waterbandp_chunk>>
   
   cat(paste0(
-  "<p style='width:1280px;'>",
+  "<p>",
   'The plots above show historic ranges for ', sitename, 
    ' based on the range of surface measurements (i.e. within 2m) collected from ',
    yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
@@ -81,9 +82,9 @@ for(i in seq_along(site_list)){
    values by month. The points represent the most 
    recent measurements collected in ', yr_current, ' by month. 
    Water quality thresholds are derived from state surface water quality 
-   standards. Parameter abbreviations and additional information are
-   defined in "About the Data".</p>\n\n'))
-  cat("</details><br>\n")
+   standards. DO is dissolved oxygen. SpCond is specific conductance. Additional 
+   information can be found in the "About the Data" tab.</p>\n\n'))
+  cat("<br>\n")
   
   cat("\n\n")
   
@@ -106,41 +107,158 @@ for(i in seq_along(site_list)){
    standards. Parameter abbreviations and additional information are
    defined in "About the Data".</p>\n\n'))
   cat("</details><br>\n\n")
+  cat(paste0("<details open><summary class = 'drop'>Summary of Trends (", 
+             paste0(yr_start, ":", yr_current), ")</summary>"))
+  cat("\n\n")
+  cat(paste0("<h1>Trends in Field Measurements (", yr_start, " to ", yr_current, ")</h1>\n\n"))
+  cat("\n\n")
+  ptf <- plotTrend(site = sitecode, years = yr_start:yr_current, span = 0.9, 
+            parameter = field_params, palette = c("#5AA7D7"), legend_position = "bottom")
   
+  print(ptf)
+  cat("\n\n")
+  cat(paste0(
+  "<p>",
+  'The plots above show trends in field measurements for ', sitename, 
+   ' collected withint 2m of the surface from ', yr_start, ' to ', yr_current, 
+   ' for each month of data. Points represent monthly sample measurements. 
+   Lines represent loess smoothed trends with span 0.9. 
+   Water quality thresholds are derived from state surface water quality standards. 
+   DO is dissolved oxygen. SpCond is specific conductance. Additional 
+   information can be found in the "About the Data" tab.</p>\n\n'))
+  cat("<br>\n")
+  
+  cat("\n\n")
+  cat(paste0("<h1>Trends in Lab Chemistry (", yr_start, " to ", yr_current, ")</h1>\n\n"))
+  cat("\n\n")
+  ptl <- plotTrend(site = sitecode, years = yr_start:yr_current, span = 0.9, 
+            parameter = lab_params, palette = c("#5AA7D7"), legend_position = "bottom")
+  print(ptl)
+  cat("\n\n")
+  cat(paste0(
+  "<p>",
+  'The plots above show trends in lab chemistry for ', sitename, 
+   ' collected withint 2m of the surface from ', yr_start, ' to ', yr_current, 
+   ' for each month of data. Points represent monthly sample measurements. 
+   Lines represent loess smoothed trends with span 0.9. 
+   Water quality thresholds are derived from state surface water quality standards. 
+   TN is total Nitrogen. TP is total Phosphorous. ANC is acid neutralizing capacity. Additional 
+   information can be found in the "About the Data" tab.</p>\n\n'))
+  cat("</details><br>\n")
+  cat("\n\n")
 }
 ```
 <br>
 
+### Water Quantity {.tabset}
 
-#### Trends {.tabset}
-```{r warning = F, message = F, fig.height=9, fig.width=13, results = 'asis'}
-sonde_params <- c("DO_mgL", "pH", "Temp_F", "SpCond_uScm")
-chem_params <- c("TN_mgL", "TP_ugL", "ANC_ueqL")#, "ChlA_ugL")
+```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=5, fig.width=13}
+for(i in seq_along(lake_list)){
+  lakecode <- lake_list[[i]]
+  sitename <- unique(site_df$SiteName[site_df$SiteCode==lakecode])
+  sitecode <- unique(site_df$SiteCode[site_df$SiteCode==lakecode])
+  cat("\n\n")
+  cat("#### ", sitename, "{.tabset}")
+  cat("\n\n")
+  cat("##### Current Year (", yr_current, ")")
+  cat("\n\n")
+  cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ") Lake Level </h1>\n\n"))
 
-cat("<details open><summary class = 'drop'>Field Measurements</summary>", "\n\n")
-pf <- plotTrend(park = parkcode, years = yr_start:yr_current, parameter = sonde_params, 
-          smooth = T, span = 0.9, legend_position = "bottom", threshold = F, numcol = 2)
-ggplotly(pf, tooltip = 'text') |> layout(legend = list(orientation = "h", x = 0, xanchor = "left", yanchor = "bottom"))
+  wl_band <- plotWaterBands(site = lakecode, year_current = yr_current, 
+                 years_historic = yr_start:yr_prev, parameter = "WaterLevel_Feet", 
+                 threshold = F)
 
-cat(paste0("<p style='width:1280px;'>Trends in field water quality parameters for ", park_name, " from ",
-           yr_start, " to ", yr_current, 
-           ". Points represent monthly sample measurements. Hovering over the points will provide more information. Clicking on sites in the legend will turn them on/off in the figure.", 
-           " Lines represent loess smoothed trends with span 0.9.</p></details>\n\n"))
+  blank <- rectGrob(gp = gpar(col = "white"))
+  
+  grid.arrange(wl_band, blank, blank, legg, blank, 
+               heights = c(0.6, 0.2),
+               widths = c(0.7, 0.15, 0.15),
+               layout_matrix = rbind(c(1, 2, 3),
+                                     c(4, 4, 5)),
+               nrow = 2, ncol = 3)
+  
+  cat(paste0(
+    "<p>",
+    'Historic ranges in water level for ', sitename, 
+     ' based on the range of measurements collected from ',
+     yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
+     historic maximum and minimum value collected for each month.
+     The second inner band represents the 95% range of historic values
+     by month. The innermost band represents the 50% range of historic
+     values by month. The points represent the most 
+     recent measurements collected in ', yr_current, ' by month. </p>\n\n'))
+  cat("\n\n")
+  cat("\n\n")
+  cat("##### Trends")
+  cat("\n\n")
+  cat("<h1>Lake Water Level</h1>")
+  cat("\n\n")
 
-cat("\n\n")
+  <<wl_trend>>
+  
+  cat("\n\n")
 
-cat("<details open><summary class = 'drop'>Lab Chemistry</summary>", "\n\n")
-pl <- plotTrend(park = parkcode, years = yr_start:yr_current, parameter = chem_params, 
-          smooth = T, span = 0.9, legend_position = "bottom", threshold = F, numcol = 2)
-ggplotly(pl, tooltip = 'text') |> layout(legend = list(orientation = "h", x = 0, xanchor = "left", yanchor = "bottom"))
+  cat(paste0(
+  "<p>",
+  'Trends in water level for ', sitename, ' from 2013 to ', yr_current, 
+  ' for each month. Points represent monthly sample measurements.', 
+  ' Lines represent loess smoothed trends with span 0.9.</p>\n\n'))
 
-cat(paste0("<p style='width:1280px;'>Trends in lab chemistry water quality parameters for ", park_name, " from ",
-           yr_start, " to ", yr_current, 
-           ". Points represent monthly sample measurements. Hovering over the points will provide more information. Clicking on sites in the legend will turn them on/off in the figure.", 
-           " Lines represent loess smoothed trends with span 0.9.</p></details>\n\n"))
+  cat("\n\n")
+  <<climbar_l>>
+  cat(paste0(
+  "<p>",
+  'Trends in monthly precipitation from May to October for ', sitename, 
+   ' from 2013 to ', yr_current, '.</p>\n\n'))
+  cat("\n\n")
+  }
 ```
 
-#### Sampling History
+```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=5, fig.width=13, cache = T}
+stream_list1 <- stream_list[!stream_list %in% "MIMASC"]
+
+for(i in seq_along(stream_list1)){
+  streamcode <- stream_list1[[i]]
+  sitename <- site_df$SiteName[site_df$SiteCode==streamcode]
+  sitecode <- site_df$SiteCode[site_df$SiteCode==streamcode]
+  cat("#### ", sitename, "{.tabset} \n\n")
+  cat("\n\n")
+  cat(paste0("##### Current Year (", yr_current, ")"))
+  cat("\n\n")
+  cat("<h1>Discharge vs. Precipitation</h1>")
+  cat("\n\n")
+  p_dis <- plotPrecipDischarge(site = sitecode, years = yr_current, palette = c("#5AA7D7", "black"))
+  print(p_dis)
+  cat("\n\n")
+  cat(paste0("<p>Monthly discharge vs. Daily precipitation for ", yr_current, 
+    " in ", sitename, ". Precipitation is shown as blue bars. Discharge is represented by a black '+'.</p>"))
+  cat("\n\n")
+  cat("\n\n")
+  
+  cat(paste0("##### Trends (", yr_start, ":", yr_current, ")"))
+  cat("\n\n")
+  cat("<h1>Discharge</h1>")
+  cat("\n\n")
+  p_dist <- plotTrend(park = parkcode, site = sitecode, years = yr_start:yr_current, parameter = "Discharge_cfs", 
+            gridlines = "grid_x", months = 5:10, threshold = F, span = 0.9)
+  print(p_dist)
+  cat("\n\n")
+  cat(paste0("<p>Trends in monthly discharge for ", yr_start, " to ", yr_current, 
+    " in ", sitename, "</p>"))
+  cat("\n\n")
+  <<climbar_s>>
+  cat("\n\n")
+  cat(paste0(
+  "<p>",
+  'Trends in monthly precipitation from May - October for ', sitename, 
+   ' from ',  yr_start, ' to ', yr_current, '.</p>\n\n'))
+
+  }
+```
+<br>
+
+
+### Sampling History {.tabset}
 ```{r error = T}
 samp_hist <- sumEvents(park = parkcode, years = yr_start:yr_current) |> 
   select(SiteType, SiteName, param_type:Oct_cens) |> 
@@ -158,106 +276,6 @@ samp_tab <-
 samp_tab
 ```
 
-### Water Quantity {.tabset}
-#### Status
-
-```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=7, fig.width=13}
-plot_sname <- ifelse(length(stream_list) == 1, site_df$SiteName[site_df$SiteCode == stream_list], 
-                     park_name)
-for(i in seq_along(stream_list)){
-  streamcode <- stream_list[[i]]
-  sitename <- site_df$SiteName[site_df$SiteCode==streamcode]
-  sitecode <- site_df$SiteCode[site_df$SiteCode==streamcode]
-  cat("###### ", sitename, "{.tabset} \n\n")
-  cat("\n\n")
-  cat("<h1>Discharge vs. Precipitation</h1>")
-  plotPrecipDischarge(site = sitecode, years = yr_current)
-  cat("\n\n")
-  cat(paste0("<p style='width:1280px;'>Monthly discharge vs. Daily precipitation for ", yr_current, 
-    " in ", sitename, ". Discharge is represented by a '+' on the figure.</p>"))
-
-  }
-```
-<br>
-
-```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=7, fig.width=13}
-cat("<details open><summary class='drop'>Lake Water Level</summary>")
-
-plot_lname <- ifelse(length(lake_list) == 1, 
-                     site_df$SiteName[site_df$SiteCode == lake_list], 
-                     park_name)
-
-plotWaterBands(park = parkcode, site = lake_list, year_current = yr_current, 
-               years_historic = yr_start:yr_prev, parameter = "WaterLevel_Feet", 
-               facet_scales = "free_y", threshold = F)
-
-cat(paste0(
-  "<p style='width:1280px;'>",
-  'Historic ranges in water level for ', plot_lname, 
-   ' based on the range of measurements collected from ',
-   yr_start, ' to ', yr_prev, ' for each month. The outermost band represents the
-   historic maximum and minimum value collected for each month.
-   The second inner band represents the 95% range of historic values
-   by month. The innermost band represents the 50% range of historic
-   values by month. The points represent the most 
-   recent measurements collected in ', yr_current, ' by month. </p>\n\n'))
-  cat("</details><br>\n\n")
-```
-
-#### Trends
-
-```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=7, fig.width=13}
-plot_sname <- ifelse(length(stream_list) == 1, site_df$SiteName[site_df$SiteCode == stream_list], 
-                     park_name)
-
-cat("<details open><summary class='drop'>Discharge</summary>")
-plotTrend(park = parkcode, site = stream_list, years = yr_start:yr_current, parameter = "Discharge_cfs", 
-          gridlines = "grid_x", months = 5:10, legend_position = "bottom")
-cat(paste0("<p style='width:1280px;'>Trends in monthly discharge for ", yr_start, " to ", yr_current, 
-    " in ", plot_sname, "</p>"))
-```
-<br>
-```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=3, fig.width=13}
-plotClimBar(park = parkcode, years = yr_start:yr_current, parameter = 'ppt', 
-            months = 5:10, gridlines = "grid_x", units = "eng", palette = "#1378b5")
-cat(paste0(
-  "<p style='width:1280px;'>",
-  'Trends in monthly precipitation from May - October for ', plot_sname, 
-   ' from ',
-   yr_start, ' to ', yr_current, '.</p>\n\n'))
-```
-</details><br>
-
-```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=7, fig.width=13}
-cat("<details open><summary class='drop'>Lake Water Level</summary>")
-
-plot_lname <- ifelse(length(lake_list) == 1, site_df$SiteName[site_df$SiteCode == lake_list], 
-                     park_name)
-
-plotTrend(park = parkcode, site = lake_list, months = 5:10,
-          years = 2013:yr_current, parameter = "WaterLevel_Feet", span = 0.5, gridlines = "grid_x",
-          legend_position = 'right', units = "eng")
-
-cat(paste0(
-  "<p style='width:1280px;'>",
-  'Trends in water level for ', plot_lname, 
-   ' from 2013 to ', yr_current, ' for each month. Points represent monthly sample measurements. Lines represent loess smoothed trends with span 0.5.</p>\n\n'))
-```
-<br>
-```{r warning = F, message = FALSE, eval = eval_lake, results = 'asis', fig.height=3, fig.width=13}
-plotClimBar(park = parkcode, years = 2013:yr_current, parameter = 'ppt',
-              months = 5:10, gridlines = "grid_x", units = "eng", palette = "#1378b5")
-cat(paste0(
-  "<p style='width:1280px;'>",
-  'Trends in monthly precipitation from May to October for ', plot_lname, 
-   ' from 2013 to ', yr_current, '.</p>\n\n'))
-
-```
-</details><br>
-
-
-
-
 ### About the Sites
 Click on the blue icons below to learn more about each site.
 
@@ -273,11 +291,11 @@ ESRINatGeo <- "http://services.arcgisonline.com/arcgis/rest/services/NatGeo_Worl
 bbox <- read.csv("boundboxes.csv") #lat/long coordinates and zoom level for each park 
 
 # Find center coordinates of park box
-long_cent <- mean(c(bbox$LongE[bbox$ParkCode == park], bbox$LongW[bbox$ParkCode == park]))
-lat_cent <- mean(c(bbox$LatN[bbox$ParkCode == park], bbox$LatS[bbox$ParkCode == park]))
+long_cent <- mean(c(bbox$LongE[bbox$ParkCode == parkcode], bbox$LongW[bbox$ParkCode == parkcode]))
+lat_cent <- mean(c(bbox$LatN[bbox$ParkCode == parkcode], bbox$LatS[bbox$ParkCode == parkcode]))
 
 # Compile water sites dataframe with codes, names, lat/long coordinates, and site type
-water_sites1 <- getSites(park = park)[,c("SiteCode", "SiteName", "SiteLatitude", "SiteLongitude",
+water_sites1 <- getSites(park = parkcode)[,c("SiteCode", "SiteName", "SiteLatitude", "SiteLongitude",
                                          "site_type", "SiteDescription")]
 
 years_active <- getEvents(park = parkcode, years = yr_start:yr_current, active = T) |> 
@@ -335,14 +353,14 @@ leaflet(height = 700) %>%
     # set default view of park
     setView(lng = long_cent,
             lat = lat_cent,
-            zoom = bbox$Zoom[bbox$ParkCode == park]) %>%
+            zoom = bbox$Zoom[bbox$ParkCode == parkcode]) %>%
     # setMaxBounds(lng1 = bbox[bbox$ParkCode == parkcode,]$LongE,
     #              lng2 = bbox[bbox$ParkCode == parkcode,]$LongW,
     #              lat1 = bbox[bbox$ParkCode == parkcode,]$LatN,
     #              lat2 = bbox[bbox$ParkCode == parkcode,]$LatS) %>%
     # add map tiles
     addTiles(group="Map", urlTemplate = NPSbasic, 
-             options = providerTileOptions(minZoom = bbox$minZoom[bbox$ParkCode == park])) %>%
+             options = providerTileOptions(minZoom = bbox$minZoom[bbox$ParkCode == parkcode])) %>%
     addTiles(group="Imagery", urlTemplate = ESRIimagery) %>%
     addTiles(group="Topo", urlTemplate = ESRItopo) %>%
     addTiles(group="NatGeo", urlTemplate = ESRINatGeo) %>%

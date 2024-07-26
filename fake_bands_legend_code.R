@@ -128,6 +128,10 @@ legg <- as_ggplot(
                                      c(2, 3))
   ))
 legg
+
+legg2 <- as_ggplot(grid.arrange(grobs = list(leg_bands_pb, leg_points_pb, leg_lines_pb), 
+                                nrow = 3))
+
 #legg <- as_ggplot(leg)
 
 #ggsave("./rmd/waterband_leg.svg", as_ggplot(leg), width = 12, height = 0.25)
