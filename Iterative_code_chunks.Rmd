@@ -133,7 +133,7 @@ cat("</details>", "\n\n")
 
 
 <!-- Climate precip bar lake plot -->
-```{r climbar_l, results = 'asis', eval = F, warning = F, message = F, fig.height = 5, fig.width = 12.6}
+```{r climbar_l, results = 'asis', eval = F, warning = F, message = F, fig.height = 5, fig.width = 12.5}
   p_ppt <- plotClimBar(park = parkcode, years = 2013:yr_current, parameter = 'ppt', palette = c("#1378b5"), 
             months = 5:10, gridlines = "grid_x", units = "eng", x_pad = c(0.05, 0.05))
   print(p_ppt)

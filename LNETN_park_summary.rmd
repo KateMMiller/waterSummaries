@@ -206,6 +206,8 @@ for(i in seq_along(lake_list)){
 
   cat("\n\n")
   <<climbar_l>>
+  cat("\n\n")
+  
   cat(paste0(
   "<p>",
   'Trends in monthly precipitation from May to October for ', sitename, 
@@ -244,7 +246,8 @@ for(i in seq_along(stream_list1)){
   print(p_dist)
   cat("\n\n")
   cat(paste0("<p>Trends in monthly discharge for ", yr_start, " to ", yr_current, 
-    " in ", sitename, "</p>"))
+    " in ", sitename, ". Points represent monthly samples.', 
+  ' Lines represent loess smoothed trends with span 0.9.</p>"))
   cat("\n\n")
   <<climbar_s>>
   cat("\n\n")
