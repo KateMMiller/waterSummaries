@@ -391,7 +391,7 @@ for(i in seq_along(stream_list)){
     " in ", sitename, ". Precipitation is shown as blue bars. Discharge is represented by a black '+'.</p>"))
   cat("\n\n")
 
-  cat(paste0("##### Trends (", yr_start, ":", yr_current, ")"))
+  cat(paste0("###### Trends (", yr_start, ":", yr_current, ")"))
   cat("\n\n")
   cat("<h1>Discharge</h1>")
   cat("\n\n")
