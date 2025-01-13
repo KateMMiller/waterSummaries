@@ -11,7 +11,9 @@ output:
 title: "NETN water summary"
 params:
   year_start: 2006 # first year of data
-  year_current: 2023 # current year of data
+  year_current: 2024 # current year of data
+  lab_chem: TRUE # change to TRUE when lab data are available
+  database: TRUE # TRUE prints info about the database used to generate report; FALSE uses data package, but this is not enabled yet.
 ---
 # {.tabset .tabset-pills}
 
@@ -26,27 +28,44 @@ library(grid)
 library(gridExtra)
 library(kableExtra)
 #library(plotly)
-
+#params <- data.frame(year_start = 2006, year_current = 2024, lab_chem = TRUE, database = TRUE)
 yr_start <- params$year_start
 yr_current <- params$year_current
 yr_prev <- yr_current - 1
+lab_chem <- params$lab_chem
+database <- params$database
 #park_list <- c("MIMA")
 
 child_env <- new.env()
-importData(type = "zip", filepath = "C:/NETN/R_Dev/Water/data/NETN_Water_Data_Package_20240725.zip")
-#importData()
+#importData(type = "zip", filepath = "C:/NETN/R_Dev/Water/data/NETN_Water_Data_Package_20240725.zip")
+importData()
 for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
 
 child_env$yr_start <- yr_start
 child_env$yr_current <- yr_current
 child_env$yr_prev <- yr_prev
 child_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA") 
-child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")
+#child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA"), "WEFA")
+child_env$lab_chem <- lab_chem
 ```
 
-```{r child = "Iterative_code_chunks.Rmd", eval = T}
+```{r eval = database}
+library(DBI)
+library(odbc)
 
+# Extract modified timestamp from DSN
+db <- dbConnect(drv = odbc(), dsn = "NETNWQ_DP")
+dblist <- odbcListObjects(db)
+  dp <- dblist$name[grepl("DataPackage", dblist$name)]
+db_version <- format(file.info(dp)$mtime, "%m/%d/%Y %H:%M")
+db_names <- strsplit(dp, "\\\\")
+db_name <- db_names[[1]][[length(db_names[[1]])]]
+
+dbDisconnect(db)
+
+time_gen <- format(Sys.time(), "%m/%d/%Y %H:%M")
 ```
+
 ## Welcome {.tabset}
 <h1>Northeast Temperate Network Water Quality Summary for `r yr_current`</h1>
 
@@ -54,6 +73,12 @@ child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA",
 <br>
 <p>This site features water quality summaries from all of parks within the Network that participate in the freshwater monitoring protocol. To see more specific information about an individual park and its study sites, click on the park’s tab at the top of the page and navigate through the water quality, water quantity, climate and related tabs. To learn more about our monitoring methods, the field and lab chemistry metrics, and the water quality thresholds used in this report, please visit the “About the Data” tab. Additional information is also available on the <a href = "https://nps.gov/im/netn/">NETN homepage</a></p>
 <br>
+```{r results = 'asis', eval = database}
+cat(paste0("<p>Report generated on ", time_gen, " using database data package version ", db_name, 
+    " last modified on ", db_version, ".</p>"))
+
+```
+
 <br>
 <br>
 ```{r out.width = "1250px"}
@@ -74,7 +99,7 @@ acad <- lapply(seq_along(c("ACAD")), function(x){
 cat(unlist(acad), sep = "\n\n")
 ```
 
-```{r results = 'asis', include = F, eval = T}
+```{r results = 'asis', include = F, eval = F}
 lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
   child_env$park = child_env$lnetn_list[[x]]
   knitr::knit_child("LNETN_park_summary.rmd", envir = child_env)
@@ -82,7 +107,7 @@ lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
   
 })
 ```
-```{r results = 'asis', eval = T}
+```{r results = 'asis', eval = F}
 cat(unlist(lnetn), sep = "\n\n")
 ```
 
