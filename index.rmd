@@ -36,17 +36,24 @@ lab_chem <- params$lab_chem
 database <- params$database
 #park_list <- c("MIMA")
 
-child_env <- new.env()
+acad_env <- new.env()
 #importData(type = "zip", filepath = "C:/NETN/R_Dev/Water/data/NETN_Water_Data_Package_20240725.zip")
 importData()
-for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
+for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), acad_env)
 
-child_env$yr_start <- yr_start
-child_env$yr_current <- yr_current
-child_env$yr_prev <- yr_prev
-child_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA") 
-#child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA"), "WEFA")
-child_env$lab_chem <- lab_chem
+acad_env$yr_start <- yr_start
+acad_env$yr_current <- yr_current
+acad_env$yr_prev <- yr_prev
+acad_env$lab_chem <- lab_chem
+
+lnetn_env <- new.env()
+for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), lnetn_env)
+
+lnetn_env$yr_start <- yr_start
+lnetn_env$yr_current <- yr_current
+lnetn_env$yr_prev <- yr_prev
+lnetn_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA") 
+lnetn_env$lab_chem <- lab_chem
 ```
 
 ```{r eval = database}
@@ -90,8 +97,8 @@ Photo looking downstream of Blow-Me-Up Brook monitoring location in Saint-Gauden
 
 ```{r results = 'asis', include = F, eval = T}
 acad <- lapply(seq_along(c("ACAD")), function(x){
-  child_env$park = "ACAD"
-  knitr::knit_child("ACAD_summary.rmd", envir = child_env)
+  acad_env$park = "ACAD"
+  knitr::knit_child("ACAD_summary.rmd", envir = acad_env)
   #knitr::knit_child("About_tabs.Rmd", envir = child_env)
   })
 ```
@@ -99,15 +106,17 @@ acad <- lapply(seq_along(c("ACAD")), function(x){
 cat(unlist(acad), sep = "\n\n")
 ```
 
-```{r results = 'asis', include = F, eval = F}
-lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
-  child_env$park = child_env$lnetn_list[[x]]
-  knitr::knit_child("LNETN_park_summary.rmd", envir = child_env)
+```{r results = 'asis', include = F, eval = T}
+lnetn <- lapply(seq_along(lnetn_env$lnetn_list), function(x){
+
+  lnetn_env$park = lnetn_env$lnetn_list[[x]]
+  park <- lnetn_env$park
+  knitr::knit_child("LNETN_park_summary.rmd", envir = lnetn_env)
   #knitr::knit_child("About_tabs.Rmd", envir = child_env)
   
 })
 ```
-```{r results = 'asis', eval = F}
+```{r results = 'asis', eval = T}
 cat(unlist(lnetn), sep = "\n\n")
 ```
 

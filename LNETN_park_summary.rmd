@@ -10,7 +10,7 @@ output:
     self_contained: yes
 title: "NETN water summary"
 params:
-  park: SARA # 4-letter park code
+  park: "SARA" # 4-letter park code
   year_start: 2006 # first year of data
   year_current: 2024 # current year of data
   lab_chem: TRUE
@@ -20,7 +20,7 @@ params:
 ```{r include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FALSE)
 ```
-```{r eval = T, results = 'hide'}
+```{r eval = F, results = 'hide'}
 ## Chunk only for testing, when needing to knit rmd on its own. Set eval = F when running from index.rmd
 ## Create environment for rmds to pull params from
 # library(tidyverse)
@@ -65,7 +65,7 @@ library(kableExtra)
 
 ```{r }
 # park = "MABI"; yr_start = 2006; yr_current = 2023;
-parkcode <- child_env$park
+parkcode <- lnetn_env$park
 #park <- parkcode
 #cat(park)
 site_df <- unique(getEvents(park = parkcode, years = yr_current)[, c("SiteCode", "SiteName", "UnitCode", "UnitName")])
@@ -402,6 +402,7 @@ for(i in seq_along(lake_list)){
   cat("\n\n")
   cat(paste0("<h1>Historic (", yr_start, " to ", yr_prev, ") vs. Current (", yr_current, ") Lake Level </h1>\n\n"))
 
+  tryCatch({
   wl_band <- plotWaterBands(site = lakecode, year_current = yr_current, 
                  years_historic = yr_start:yr_prev, parameter = "WaterLevel_Feet", 
                  threshold = F)
@@ -414,7 +415,9 @@ for(i in seq_along(lake_list)){
                layout_matrix = rbind(c(1, 2, 3),
                                      c(4, 4, 5)),
                nrow = 2, ncol = 3)
-  
+  }, 
+  error = function(e){cat("Water level data not available for ", yr_current)}
+  )
   cat(paste0(
     "<p>",
     'Historic ranges in water level for ', sitename, 
