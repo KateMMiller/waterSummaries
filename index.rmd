@@ -80,11 +80,6 @@ time_gen <- format(Sys.time(), "%m/%d/%Y %H:%M")
 <br>
 <p>This site features water quality summaries from all of parks within the Network that participate in the freshwater monitoring protocol. To see more specific information about an individual park and its study sites, click on the park’s tab at the top of the page and navigate through the water quality, water quantity, climate and related tabs. To learn more about our monitoring methods, the field and lab chemistry metrics, and the water quality thresholds used in this report, please visit the “About the Data” tab. Additional information is also available on the <a href = "https://nps.gov/im/netn/">NETN homepage</a></p>
 <br>
-```{r results = 'asis', eval = database}
-cat(paste0("<p>Report generated on ", time_gen, " using database data package version ", db_name, 
-    " last modified on ", db_version, ".</p>"))
-
-```
 
 <br>
 <br>
@@ -94,6 +89,13 @@ knitr::include_graphics("./www/SAGASA_20240620_PP_DS.jpg")
 <br>
 <br>
 Photo looking downstream of Blow-Me-Up Brook monitoring location in Saint-Gaudens National Historical Park, June 2024.
+
+
+```{r results = 'asis', eval = database}
+cat(paste0("<p>Report generated on ", time_gen, " using database data package version ", db_name, 
+    " last modified on ", db_version, ".</p>"))
+
+```
 
 ```{r results = 'asis', include = F, eval = T}
 acad <- lapply(seq_along(c("ACAD")), function(x){

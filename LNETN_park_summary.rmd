@@ -21,8 +21,8 @@ params:
 knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FALSE)
 ```
 ```{r eval = F, results = 'hide'}
-## Chunk only for testing, when needing to knit rmd on its own. Set eval = F when running from index.rmd
-## Create environment for rmds to pull params from
+# ## Chunk only for testing, when needing to knit rmd on its own. Set eval = F when running from index.rmd
+# ## Create environment for rmds to pull params from
 # library(tidyverse)
 # library(waterNETN)
 # library(climateNETN)
@@ -40,17 +40,17 @@ knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FA
 # park <- params$park
 # ##park_list <- c("MIMA")
 # 
-# child_env <- new.env()
+# lnetn_env <- new.env()
 # importData()
-# for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
+# for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), lnetn_env)
 # 
-# child_env$yr_start <- yr_start
-# child_env$yr_current <- yr_current
-# child_env$yr_prev <- yr_prev
-# child_env$lnetn_list <- c("MABI", "MIMA", "WEFA")#, "MORR", "ROVA", "SAGA", "SARA", "WEFA")
-# child_env$netn_list <- c("MABI", "MIMA", "WEFA")#, "MORR", "ROVA", "SAGA", "SARA", "WEFA")
-# child_env$lab_chem <- lab_chem
-# child_env$park <- park
+# lnetn_env$yr_start <- yr_start
+# lnetn_env$yr_current <- yr_current
+# lnetn_env$yr_prev <- yr_prev
+# lnetn_env$lnetn_list <- c("MABI", "MIMA", "WEFA")#, "MORR", "ROVA", "SAGA", "SARA", "WEFA")
+# lnetn_env$netn_list <- c("MABI", "MIMA", "WEFA")#, "MORR", "ROVA", "SAGA", "SARA", "WEFA")
+# lnetn_env$lab_chem <- lab_chem
+# lnetn_env$park <- park
 ```
 
 ```{r include = F, results = 'hide'}
@@ -435,10 +435,10 @@ for(i in seq_along(lake_list)){
   cat("<h1>Lake Water Level</h1>")
   cat("\n\n")
 
-  plotTrend(park = parkcode, site = lakecode, months = 5:10,
+  wl_trend <- plotTrend(park = parkcode, site = lakecode, months = 5:10,
             years = 2013:yr_current, parameter = "WaterLevel_Feet", span = 0.9, gridlines = "grid_x",
             legend_position = 'none', threshold = FALSE)
-  
+  print(wl_trend)
   cat("\n\n")
 
   cat(paste0(
@@ -449,9 +449,10 @@ for(i in seq_along(lake_list)){
 
   cat("\n\n")
   
-  plotClimBar(park = parkcode, years = 2013:yr_current, parameter = 'ppt', palette = c("#1378b5"), 
+  precip_trend <- 
+  climateNETN::plotClimBar(park = parkcode, years = 2013:yr_current, parameter = 'ppt', palette = c("#1378b5"), 
             months = 5:10, gridlines = "grid_x", units = "eng", x_pad = c(0.05, 0.05))
-  
+  print(precip_trend)
   cat("\n\n")
   
   cat(paste0(
@@ -462,7 +463,7 @@ for(i in seq_along(lake_list)){
   }
 ```
 
-```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=5, fig.width=13, cache = T}
+```{r warning = F, message = FALSE, eval = eval_stream, results = 'asis', fig.height=5, fig.width=13}
 stream_list1 <- stream_list[!stream_list %in% "MIMASC"]
 
 for(i in seq_along(stream_list1)){
@@ -476,10 +477,10 @@ for(i in seq_along(stream_list1)){
   cat("<h1>Discharge vs. Precipitation</h1>")
   cat("\n\n")
   tryCatch(
-   plotPrecipDischarge(site = sitecode, years = yr_current, palette = c("#5AA7D7", "black")), 
-   error = function(e){paste0("No discharge measurements recorded for ", sitename, " in", yr_current)}
-  
+  precdisch <-  plotPrecipDischarge(site = sitecode, years = yr_current, palette = c("#5AA7D7", "black")), 
+   error = function(e){paste0("No discharge measurements recorded for ", sitename, " in ", yr_current)}
    )
+  print(precdisch)
   cat("\n\n")
   cat(paste0("<p>Monthly discharge vs. Daily precipitation for ", yr_current, 
     " in ", sitename, ". Precipitation is shown as blue bars. Discharge is represented by a black '+'.</p>"))
