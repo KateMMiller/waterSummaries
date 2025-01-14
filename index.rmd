@@ -90,7 +90,8 @@ knitr::include_graphics("./www/SAGASA_20240620_PP_DS.jpg")
 <br>
 Photo looking downstream of Blow-Me-Up Brook monitoring location in Saint-Gaudens National Historical Park, June 2024.
 
-
+<br>
+<br>
 ```{r results = 'asis', eval = database}
 cat(paste0("<p>Report generated on ", time_gen, " using database data package version ", db_name, 
     " last modified on ", db_version, ".</p>"))
