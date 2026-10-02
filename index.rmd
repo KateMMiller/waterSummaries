@@ -1,0 +1,125 @@
+---
+output: 
+  html_document:
+    fig_caption: yes
+    css: www/webstyles.css
+    anchor_sections: FALSE
+    includes: 
+      in_header: "header_manual.html" 
+      after_body: "footer.html"
+    self_contained: yes
+title: "NETN water summary"
+params:
+  year_start: 2006 # first year of data
+  year_current: 2024 # current year of data
+  dppath: "./data/records-2313941.zip" # download from datastore and put in data folder
+---
+# {.tabset .tabset-pills}
+
+```{r echo = F, include = F, cache = F}
+knitr::opts_chunk$set(echo = FALSE, fig.pos = "h", warning = FALSE, message = FALSE)
+# Create environment for rmds to pull params from
+library(tidyverse)
+library(waterNETN)
+library(climateNETN)
+library(leaflet)
+library(grid)
+library(gridExtra)
+library(kableExtra)
+#library(plotly)
+
+yr_start <- params$year_start
+yr_current <- params$year_current
+yr_prev <- yr_current - 1
+
+yr_start_lnetn <- 2006
+yr_current_lnetn <- 2024
+yr_prev_lnetn <- yr_current_lnetn - 1
+
+dp_name <- params$dbpath
+#park_list <- c("MIMA")
+
+child_env <- new.env()
+importData(type = "zip", filepath = params$dppath)
+#importData()
+for(n in ls(VIEWS_WQ, all.names = TRUE)) assign(n, get(n, VIEWS_WQ), child_env)
+
+child_env$yr_start <- yr_start
+child_env$yr_current <- yr_current
+child_env$yr_prev <- yr_prev
+child_env$yr_start_lnetn <- yr_start_lnetn
+child_env$yr_current_lnetn <- yr_current_lnetn
+child_env$yr_prev_lnetn <- yr_prev_lnetn
+child_env$dp_name <- dp_name
+
+child_env$lnetn_list <- c("MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA") 
+child_env$netn_list <- c("ACAD", "MABI", "MIMA", "MORR", "ROVA", "SAGA", "SARA", "WEFA")
+```
+
+## Welcome {.tabset}
+<h1>Northeast Temperate Network Water Quality Summary for `r yr_current`</h1>
+
+<p>Welcome to the Northeast Temperate Network (NETN) water quality summaries website. This website is updated annually, following the latest field season, and after the data have undergone quality assurance and quality control procedures. </p>
+<br>
+<p>This site features water quality summaries from all of parks within the Network that participate in the freshwater monitoring protocol. To see more specific information about an individual park and its study sites, click on the park’s tab at the top of the page and navigate through the water quality, water quantity, climate and related tabs. To learn more about our monitoring methods, the field and lab chemistry metrics, and the water quality thresholds used in this report, please visit the “About the Data” tab. Additional information is also available on the <a href = "https://nps.gov/im/netn/">NETN homepage</a></p>
+<br>
+<br>
+<br>
+```{r out.width = "1250px", fig.alt = "Photo looking downstream of Blow-Me-Up Brook monitoring location in Saint-Gaudens National Historical Park, June 2024."}
+knitr::include_graphics("./www/SAGASA_20240620_PP_DS.jpg")
+```
+<br>
+<br>
+Photo looking downstream of Blow-Me-Up Brook monitoring location in Saint-Gaudens National Historical Park, June 2024.
+<br>
+<br>
+<br>
+
+```{r}
+db_rec1 <- sub(".*/|", "", dp_name)
+db_rec <- gsub(".*?([0-9]+).*", "\\1", db_rec1)
+
+```
+```{r results = 'asis'}
+# Extract data package number
+if(db_rec != 2313941){
+cat(paste0("<p>Report generated on ", format(Sys.Date(), "%B %d, %Y"), " using data package downloadable from: ",
+           paste0("<a href = 'https://irma.nps.gov/DataStore/Reference/Profile/", paste0(db_rec)), "'",
+           ">https://irma.nps.gov/DataStore/Reference/Profile/", paste0(db_rec), "</a>."), "</p>")
+} else {
+  cat(paste0("<p>Report generated on ", format(Sys.Date(), "%B %d, %Y"), " using data package downloadable from: ",
+           paste0("<a href = 'https://irma.nps.gov/DataStore/Reference/Profile/2313941>'", 
+                  "https://irma.nps.gov/DataStore/Reference/Profile/2313941</a>.</p>")))
+}
+
+```
+
+
+```{r results = 'asis', include = F, eval = T}
+acad <- lapply(seq_along(c("ACAD")), function(x){
+  child_env$park = "ACAD"
+  knitr::knit_child("ACAD_summary.rmd", envir = child_env)
+  #knitr::knit_child("About_tabs.Rmd", envir = child_env)
+  })
+```
+```{r results = 'asis', eval = T}
+cat(unlist(acad), sep = "\n\n")
+```
+
+```{r results = 'asis', include = F, eval = T}
+lnetn <- lapply(seq_along(child_env$lnetn_list), function(x){
+  child_env$park = child_env$lnetn_list[[x]]
+  try(knitr::knit_child("LNETN_park_summary.rmd", envir = child_env))
+  #knitr::knit_child("About_tabs.Rmd", envir = child_env)
+  
+})
+```
+```{r results = 'asis', eval = T}
+cat(unlist(lnetn), sep = "\n\n")
+```
+
+
+```{r child = "About_tabs.Rmd", eval = T}
+
+```
+
