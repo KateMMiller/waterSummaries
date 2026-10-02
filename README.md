@@ -1,3 +1,5 @@
+<h3>This repo has been moved to <a href="https://github.com/DOI-NPS/waterSummaries">https://github.com/DOI-NPS/waterSummaries</a> and is no longer being developed at this location.</h3>
+
 # waterSummaries
 This repo contains scripts and R markdown reports that generate a tabbed html summarizing water quality and quantity by park, 
 site type (eg lake or stream), site, and parameter type (eg, water quality or quantity, field vs. lab measurements). 

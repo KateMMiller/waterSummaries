@@ -14,6 +14,8 @@ params:
   year_current: 2024 # current year of data
   dppath: "./data/records-2313941.zip" # download from datastore and put in data folder
 ---
+<h1 style='color:red;'>This website has been moved to <a href="https://doi-nps.github.io/waterSummaries">https://doi-nps.github.io/waterSummaries</a> and will no longer be updated on this site. The code repo for this site is <a href="https://github.com/DOI-NPS/waterSummaries">https://github.com/DOI-NPS/waterSummaries</a>.</h1>
+
 # {.tabset .tabset-pills}
 
 ```{r echo = F, include = F, cache = F}
